@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { ArrowDownTrend, ArrowUpTrend, Shuffle, Truck, RefreshCw, MapPin } from 'lucide-react';
+import { TrendingDown, TrendingUp, Shuffle, Truck, RefreshCw, Wheat, Store } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +27,7 @@ const Dashboard = ({ supplies, demands, shipments, onAutoMatch }: DashboardProps
         <Card className="border-slate-100 shadow-sm">
           <CardContent className="p-6 flex items-center space-x-5">
             <div className="p-4 bg-rose-100 text-rose-600 rounded-2xl">
-              <ArrowDownTrend size={24} />
+              <TrendingDown size={24} />
             </div>
             <div>
               <span className="text-slate-500 text-sm block font-medium">Zona Defisit Terdeteksi</span>
@@ -40,7 +40,7 @@ const Dashboard = ({ supplies, demands, shipments, onAutoMatch }: DashboardProps
         <Card className="border-slate-100 shadow-sm">
           <CardContent className="p-6 flex items-center space-x-5">
             <div className="p-4 bg-emerald-100 text-emerald-600 rounded-2xl">
-              <ArrowUpTrend size={24} />
+              <TrendingUp size={24} />
             </div>
             <div>
               <span className="text-slate-500 text-sm block font-medium">Zona Surplus Terdeteksi</span>
