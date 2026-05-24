@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { PlusCircle, Megaphone, MapPin, Store } from 'lucide-react';
+import { PlusCircle, Megaphone, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ interface DemandPortalProps {
 const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
   const [formData, setFormData] = useState({
     client: "",
-    region: "Jakarta",
+    region: "Banda Aceh",
     commodity: "Beras",
     qty: "",
     maxPrice: "",
@@ -32,7 +32,7 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
       qty: parseFloat(formData.qty),
       maxPrice: parseFloat(formData.maxPrice)
     });
-    setFormData({ client: "", region: "Jakarta", commodity: "Beras", qty: "", maxPrice: "", date: "" });
+    setFormData({ client: "", region: "Banda Aceh", commodity: "Beras", qty: "", maxPrice: "", date: "" });
   };
 
   return (
@@ -40,7 +40,7 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
       <Card className="lg:col-span-1 border-slate-100 shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg font-bold flex items-center">
-            <PlusCircle className="text-amber-600 mr-2" size={20} /> Input Permintaan Pasar
+            <PlusCircle className="text-amber-600 mr-2" size={20} /> Input Permintaan Pasar Aceh
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -48,7 +48,7 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Nama Pasar / Retail</label>
               <Input 
-                placeholder="Pasar Jaya Senen" 
+                placeholder="Pasar Induk Lambaro" 
                 value={formData.client} 
                 onChange={e => setFormData({...formData, client: e.target.value})}
                 className="rounded-xl"
@@ -77,10 +77,10 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Jakarta">Jakarta</SelectItem>
-                    <SelectItem value="Bandung">Bandung</SelectItem>
-                    <SelectItem value="Semarang">Semarang</SelectItem>
-                    <SelectItem value="Surabaya">Surabaya</SelectItem>
+                    <SelectItem value="Banda Aceh">Banda Aceh</SelectItem>
+                    <SelectItem value="Lhokseumawe">Lhokseumawe</SelectItem>
+                    <SelectItem value="Meulaboh">Meulaboh</SelectItem>
+                    <SelectItem value="Langsa">Langsa</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -101,7 +101,7 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Harga Max / Kg (Rp)</label>
                 <Input 
                   type="number" 
-                  placeholder="Misal: 15000" 
+                  placeholder="Misal: 12000" 
                   value={formData.maxPrice} 
                   onChange={e => setFormData({...formData, maxPrice: e.target.value})}
                   className="rounded-xl"
@@ -128,7 +128,7 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
 
       <Card className="lg:col-span-2 border-slate-100 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg font-bold">Permintaan Konsumen & Defisit Sektor</CardTitle>
+          <CardTitle className="text-lg font-bold">Monitor Defisit Pangan Aceh</CardTitle>
           <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-none">Live Monitor</Badge>
         </CardHeader>
         <CardContent>

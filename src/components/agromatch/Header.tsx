@@ -31,7 +31,7 @@ const Header = ({ activeTab, setActiveTab }: HeaderProps) => {
           </div>
           <div>
             <span className="text-2xl font-bold tracking-tight block">AgroMatch</span>
-            <span className="text-xs text-emerald-300">Hub Pangan Real-Time Antar Wilayah</span>
+            <span className="text-xs text-emerald-300">Hub Pangan Real-Time Provinsi Aceh</span>
           </div>
         </div>
         

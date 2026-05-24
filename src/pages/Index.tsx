@@ -14,27 +14,27 @@ import { showSuccess, showInfo } from '@/utils/toast';
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   
-  // Simulated Database State
+  // Simulated Database State - Aceh Localized
   const [supplies, setSupplies] = useState([
-    { id: 1, region: "Karawang", commodity: "Beras", qty: 120, price: 11000, date: "2026-06-10", cooperative: "Koperasi Tani Makmur" },
-    { id: 2, region: "Brebes", commodity: "Bawang Merah", qty: 45, price: 24000, date: "2026-06-12", cooperative: "Koperasi Berkah Tani" },
-    { id: 3, region: "Cianjur", commodity: "Cabai Merah", qty: 15, price: 32000, date: "2026-06-08", cooperative: "Koperasi Horti Lestari" },
-    { id: 4, region: "Malang", commodity: "Kentang", qty: 60, price: 14000, date: "2026-06-15", cooperative: "Koperasi Tani Agro Jaya" }
+    { id: 1, region: "Pidie", commodity: "Beras", qty: 150, price: 10500, date: "2026-06-10", cooperative: "Koperasi Meuseuraya Pidie" },
+    { id: 2, region: "Bener Meriah", commodity: "Kentang", qty: 45, price: 12000, date: "2026-06-12", cooperative: "Koperasi Gayo Horti" },
+    { id: 3, region: "Aceh Tengah", commodity: "Cabai Merah", qty: 20, price: 35000, date: "2026-06-08", cooperative: "Koperasi Tani Dataran Tinggi" },
+    { id: 4, region: "Aceh Barat Daya (Abdya)", commodity: "Beras", qty: 200, price: 10200, date: "2026-06-15", cooperative: "Koperasi Padi Unggul Abdya" }
   ]);
 
   const [demands, setDemands] = useState([
-    { id: 1, region: "Jakarta", commodity: "Beras", qty: 150, maxPrice: 12500, date: "2026-06-12", client: "Pasar Induk Cipinang" },
-    { id: 2, region: "Bandung", commodity: "Cabai Merah", qty: 30, maxPrice: 35000, date: "2026-06-09", client: "Pasar Caringin" },
-    { id: 3, region: "Semarang", commodity: "Bawang Merah", qty: 25, maxPrice: 26000, date: "2026-06-14", client: "Pasar Johar" }
+    { id: 1, region: "Banda Aceh", commodity: "Beras", qty: 180, maxPrice: 12000, date: "2026-06-12", client: "Pasar Induk Lambaro" },
+    { id: 2, region: "Lhokseumawe", commodity: "Cabai Merah", qty: 35, maxPrice: 40000, date: "2026-06-09", client: "Pasar Pajak Inpres" },
+    { id: 3, region: "Meulaboh", commodity: "Bawang Merah", qty: 15, maxPrice: 28000, date: "2026-06-14", client: "Pasar Bina Usaha" }
   ]);
 
   const [shipments, setShipments] = useState([
-    { id: 101, sender: "Koperasi Tani Makmur (Karawang)", receiver: "Pasar Induk Cipinang (Jakarta)", commodity: "Beras", qty: 80, logistics: "Trans Agro Cargo", status: "Dalam Perjalanan", eta: "4 Jam" }
+    { id: 101, sender: "Koperasi Meuseuraya (Pidie)", receiver: "Pasar Induk Lambaro (Banda Aceh)", commodity: "Beras", qty: 100, logistics: "Trans Kutaraja Logistik", status: "Dalam Perjalanan", eta: "2 Jam" }
   ]);
 
   const [alerts, setAlerts] = useState<AlertItem[]>([
-    { id: 1, type: "danger", text: "Jakarta berpotensi DEFISIT Beras sebesar 30 Ton dalam 3 hari ke depan." },
-    { id: 2, type: "success", text: "Karawang mengalami SURPLUS Beras sebesar 40 Ton minggu ini." }
+    { id: 1, type: "danger", text: "Banda Aceh berpotensi DEFISIT Beras sebesar 30 Ton akibat lonjakan permintaan di Pasar Lambaro." },
+    { id: 2, type: "success", text: "Wilayah Abdya melaporkan SURPLUS Beras sebesar 50 Ton dari hasil panen raya minggu ini." }
   ]);
 
   // Handlers
@@ -61,7 +61,7 @@ const Index = () => {
     if (!supply || !demand) return;
 
     const matchedQty = Math.min(supply.qty, demand.qty);
-    const logisticsAgencies = ["Karya Mandiri Logistik", "Sinar Tani Expedisi", "Trans Agro Cargo", "Bumi Distribusi"];
+    const logisticsAgencies = ["Trans Kutaraja Logistik", "Aceh Cargo Express", "Serambi Distribusi", "Gayo Logistik"];
     const selectedLogistics = logisticsAgencies[Math.floor(Math.random() * logisticsAgencies.length)];
 
     // Update Supply and Demand
@@ -77,7 +77,7 @@ const Index = () => {
       qty: matchedQty,
       logistics: selectedLogistics,
       status: "Diproses Armada",
-      eta: "12 Jam"
+      eta: "5 Jam"
     };
 
     setShipments([newShipment, ...shipments]);
@@ -121,7 +121,7 @@ const Index = () => {
       <footer className="bg-slate-900 text-slate-400 py-8 text-center text-xs mt-auto border-t border-slate-800">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex flex-col items-center md:items-start">
-            <p>© 2026 AgroMatch. Hak Cipta Dilindungi.</p>
+            <p>© 2026 AgroMatch Aceh. Hak Cipta Dilindungi.</p>
           </div>
           <div className="flex flex-col items-center md:items-end">
             <MadeWithDyad />

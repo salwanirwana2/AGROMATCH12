@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { PlusCircle, CloudUpload, MapPin, Wheat } from 'lucide-react';
+import { PlusCircle, CloudUpload, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ interface SupplyPortalProps {
 const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
   const [formData, setFormData] = useState({
     cooperative: "",
-    region: "Karawang",
+    region: "Pidie",
     commodity: "Beras",
     qty: "",
     price: "",
@@ -32,7 +32,7 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
       qty: parseFloat(formData.qty),
       price: parseFloat(formData.price)
     });
-    setFormData({ cooperative: "", region: "Karawang", commodity: "Beras", qty: "", price: "", date: "" });
+    setFormData({ cooperative: "", region: "Pidie", commodity: "Beras", qty: "", price: "", date: "" });
   };
 
   return (
@@ -40,7 +40,7 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
       <Card className="lg:col-span-1 border-slate-100 shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg font-bold flex items-center">
-            <PlusCircle className="text-emerald-600 mr-2" size={20} /> Input Hasil Tani
+            <PlusCircle className="text-emerald-600 mr-2" size={20} /> Input Hasil Tani Aceh
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -48,7 +48,7 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Nama Koperasi Tani</label>
               <Input 
-                placeholder="Koperasi Mulia Tani" 
+                placeholder="Koperasi Meuseuraya" 
                 value={formData.cooperative} 
                 onChange={e => setFormData({...formData, cooperative: e.target.value})}
                 className="rounded-xl"
@@ -77,10 +77,10 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Karawang">Karawang</SelectItem>
-                    <SelectItem value="Brebes">Brebes</SelectItem>
-                    <SelectItem value="Cianjur">Cianjur</SelectItem>
-                    <SelectItem value="Malang">Malang</SelectItem>
+                    <SelectItem value="Pidie">Pidie</SelectItem>
+                    <SelectItem value="Bener Meriah">Bener Meriah</SelectItem>
+                    <SelectItem value="Aceh Tengah">Aceh Tengah</SelectItem>
+                    <SelectItem value="Aceh Barat Daya (Abdya)">Abdya</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -101,7 +101,7 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Harga / Kg (Rp)</label>
                 <Input 
                   type="number" 
-                  placeholder="Misal: 12000" 
+                  placeholder="Misal: 10500" 
                   value={formData.price} 
                   onChange={e => setFormData({...formData, price: e.target.value})}
                   className="rounded-xl"
@@ -120,7 +120,7 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
             </div>
 
             <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-6 rounded-xl shadow-md">
-              <CloudUpload className="mr-2 h-5 w-5" /> Pasang Di Bursa Suplai
+              <CloudUpload className="mr-2 h-5 w-5" /> Pasang Di Bursa Suplai Aceh
             </Button>
           </form>
         </CardContent>
@@ -128,7 +128,7 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
 
       <Card className="lg:col-span-2 border-slate-100 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg font-bold">Histori Penjualan & Bursa Suplai</CardTitle>
+          <CardTitle className="text-lg font-bold">Bursa Suplai Komoditas Aceh</CardTitle>
           <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-none">Live Update</Badge>
         </CardHeader>
         <CardContent>

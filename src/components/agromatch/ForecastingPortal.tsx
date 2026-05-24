@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Cpu, LineChart as ChartIcon } from 'lucide-react';
+import { Cpu } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
@@ -9,15 +9,15 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 const forecastingData: Record<string, any> = {
   "Beras": {
     data: [
-      { month: "Jan", supply: 80, demand: 90 },
-      { month: "Feb", supply: 95, demand: 92 },
-      { month: "Mar", supply: 130, demand: 95 },
-      { month: "Apr", supply: 150, demand: 98 },
-      { month: "Mei", supply: 110, demand: 100 },
-      { month: "Jun*", supply: 85, demand: 105 },
-      { month: "Jul*", supply: 75, demand: 110 },
+      { month: "Jan", supply: 120, demand: 140 },
+      { month: "Feb", supply: 135, demand: 142 },
+      { month: "Mar", supply: 180, demand: 145 },
+      { month: "Apr", supply: 210, demand: 148 },
+      { month: "Mei", supply: 160, demand: 150 },
+      { month: "Jun*", supply: 110, demand: 155 },
+      { month: "Jul*", supply: 90, demand: 160 },
     ],
-    analysis: "Defisit Beras diprediksi mulai terjadi di bulan Juni-Juli karena puncak musim kemarau. Diperlukan mitigasi pengalihan surplus dari wilayah Jawa Tengah bagian selatan."
+    analysis: "Defisit Beras di Banda Aceh diprediksi terjadi pada Juni-Juli akibat berakhirnya masa panen raya di Pidie dan Abdya. Disarankan melakukan mobilisasi stok dari gudang penyimpanan di wilayah pesisir barat sebelum puncak kemarau."
   },
   "Cabai Merah": {
     data: [
@@ -29,7 +29,7 @@ const forecastingData: Record<string, any> = {
       { month: "Jun*", supply: 65, demand: 45 },
       { month: "Jul*", supply: 55, demand: 47 },
     ],
-    analysis: "Pasokan Cabai Merah diperkirakan melimpah (surplus) di bulan Juni karena panen raya hortikultura Jawa Barat. Pasar induk Jakarta disarankan melakukan pra-kontrak beli sekarang."
+    analysis: "Pasokan Cabai Merah dari dataran tinggi Gayo (Bener Meriah & Aceh Tengah) diperkirakan melimpah di bulan Juni. Pasar di Lhokseumawe dan Langsa disarankan melakukan kontrak beli sekarang untuk menstabilkan harga eceran."
   },
   "Bawang Merah": {
     data: [
@@ -41,7 +41,7 @@ const forecastingData: Record<string, any> = {
       { month: "Jun*", supply: 30, demand: 36 },
       { month: "Jul*", supply: 20, demand: 38 },
     ],
-    analysis: "Bawang merah menghadapi risiko defisit parah di bulan Juli. Koperasi di wilayah Brebes harus bersiap menstabilkan stok cold storage."
+    analysis: "Risiko defisit Bawang Merah terdeteksi di wilayah Meulaboh pada bulan Juli. Diperlukan mitigasi pengiriman dari sentra produksi lokal atau koordinasi dengan distributor luar daerah untuk menjaga ketersediaan."
   }
 };
 
@@ -54,8 +54,8 @@ const ForecastingPortal = () => {
       <Card className="border-slate-100 shadow-sm">
         <CardHeader className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <CardTitle className="text-lg font-bold">Peramalan AI & Tren Pasokan</CardTitle>
-            <p className="text-sm text-slate-500 mt-0.5">Analisis tren musiman historis & kecerdasan buatan.</p>
+            <CardTitle className="text-lg font-bold">Peramalan AI & Tren Pasokan Aceh</CardTitle>
+            <p className="text-sm text-slate-500 mt-0.5">Analisis tren musiman lokal & kecerdasan buatan.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {Object.keys(forecastingData).map(commodity => (
@@ -96,7 +96,7 @@ const ForecastingPortal = () => {
               <Cpu size={24} />
             </div>
             <div>
-              <h4 className="font-bold text-emerald-950 text-sm">Analisis Prediktif AI AgroMatch</h4>
+              <h4 className="font-bold text-emerald-950 text-sm">Analisis Prediktif AI AgroMatch Aceh</h4>
               <p className="text-emerald-900 text-xs mt-1 leading-relaxed">{activeForecast.analysis}</p>
             </div>
           </div>
