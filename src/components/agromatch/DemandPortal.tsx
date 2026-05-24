@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { PlusCircle, Bullhorn, MapPin, Store } from 'lucide-react';
+import { PlusCircle, Megaphone, MapPin, Store } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -120,7 +120,7 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
             </div>
 
             <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-6 rounded-xl shadow-md">
-              <Bullhorn className="mr-2 h-5 w-5" /> Tayangkan Permintaan
+              <Megaphone className="mr-2 h-5 w-5" /> Tayangkan Permintaan
             </Button>
           </form>
         </CardContent>
