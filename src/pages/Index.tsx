@@ -9,7 +9,7 @@ import DemandPortal from '@/components/agromatch/DemandPortal';
 import LogisticsPortal from '@/components/agromatch/LogisticsPortal';
 import ForecastingPortal from '@/components/agromatch/ForecastingPortal';
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { showSuccess, showInfo, showWarning } from '@/utils/toast';
+import { showSuccess, showInfo } from '@/utils/toast';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -109,7 +109,7 @@ const Index = () => {
           <DemandPortal demands={demands} onAddDemand={handleAddDemand} />
         )}
 
-        {activeTab === 'logistik' && (
+        {activeTab === 'logistics' && (
           <LogisticsPortal shipments={shipments} />
         )}
 
