@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Handshake, LayoutDashboard, Wheat, Store, Truck, LineChart } from 'lucide-react';
+import { LayoutDashboard, Wheat, Store, Truck, LineChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface HeaderProps {
@@ -22,8 +22,12 @@ const Header = ({ activeTab, setActiveTab }: HeaderProps) => {
     <header className="bg-emerald-900 text-white shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex items-center space-x-3">
-          <div className="bg-emerald-500 text-emerald-950 p-2.5 rounded-xl flex items-center justify-center shadow-md">
-            <Handshake size={24} />
+          <div className="bg-white p-1 rounded-xl flex items-center justify-center shadow-md overflow-hidden w-12 h-12">
+            <img 
+              src="/src/assets/logo.png" 
+              alt="AgroMatch Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
             <span className="text-2xl font-bold tracking-tight block">AgroMatch</span>
