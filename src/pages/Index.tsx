@@ -120,12 +120,10 @@ const Index = () => {
 
       <footer className="bg-slate-900 text-slate-400 py-8 text-center text-xs mt-auto border-t border-slate-800">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-left">
-            <p className="font-bold text-slate-200 mb-1">AgroMatch App Prototype</p>
-            <p>Diuji untuk platform multipengguna (Koperasi Tani, Retail, Logistik)</p>
-          </div>
-          <div className="flex flex-col items-end">
+          <div className="flex flex-col items-center md:items-start">
             <p>© 2026 AgroMatch. Hak Cipta Dilindungi.</p>
+          </div>
+          <div className="flex flex-col items-center md:items-end">
             <MadeWithDyad />
           </div>
         </div>
