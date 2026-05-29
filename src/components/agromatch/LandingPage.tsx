@@ -1,8 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Wheat, Store, Truck, Cpu, ArrowRight, BarChart3, ShieldCheck, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Wheat, Store, Truck, Cpu, ArrowRight, Zap, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface LandingPageProps {
@@ -21,6 +20,41 @@ const LandingPage = ({ onSelectRole }: LandingPageProps) => {
     { id: 'retail', title: 'Retail / Pasar', desc: 'Input kebutuhan & monitor stok pangan.', icon: Store, color: 'bg-amber-600' },
     { id: 'logistik', title: 'Mitra Logistik', desc: 'Kelola armada & rute distribusi.', icon: Truck, color: 'bg-indigo-600' },
     { id: 'admin', title: 'Admin / Forecaster', desc: 'Matchmaking AI & analisis tren.', icon: Cpu, color: 'bg-slate-800' }
+  ];
+
+  const workflowSteps = [
+    {
+      title: "Koperasi Suplai Data",
+      desc: "Petani lokal menginput hasil panen segar ke sistem.",
+      icon: Wheat,
+      color: "from-emerald-400 to-emerald-600",
+      shadow: "shadow-emerald-200",
+      bg: "bg-emerald-50"
+    },
+    {
+      title: "AI Mencocokkan",
+      desc: "Algoritma cerdas mencari rute distribusi paling efisien.",
+      icon: Cpu,
+      color: "from-cyan-400 to-teal-500",
+      shadow: "shadow-cyan-200",
+      bg: "bg-cyan-50"
+    },
+    {
+      title: "Logistik Mengirim",
+      desc: "Armada logistik memobilisasi pangan ke titik defisit.",
+      icon: Truck,
+      color: "from-indigo-400 to-indigo-600",
+      shadow: "shadow-indigo-200",
+      bg: "bg-indigo-50"
+    },
+    {
+      title: "Retail Menerima",
+      desc: "Pasar menerima pasokan dengan harga yang stabil.",
+      icon: Store,
+      color: "from-amber-400 to-orange-500",
+      shadow: "shadow-amber-200",
+      bg: "bg-amber-50"
+    }
   ];
 
   return (
@@ -52,27 +86,40 @@ const LandingPage = ({ onSelectRole }: LandingPageProps) => {
         </div>
       </section>
 
-      {/* How it Works */}
-      <section className="bg-white rounded-[3rem] p-12 shadow-sm border border-slate-100 mb-16">
-        <div className="text-center mb-12">
+      {/* Alur Kerja AgroMatch */}
+      <section className="bg-slate-50/50 rounded-[3rem] p-12 border border-slate-100 mb-16">
+        <div className="text-center mb-16">
           <h2 className="text-3xl font-bold text-slate-900">Alur Kerja AgroMatch</h2>
           <p className="text-slate-500 mt-2">Sistem otomatisasi distribusi pangan dari hulu ke hilir.</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {[
-            { icon: Wheat, text: "Koperasi Suplai Data" },
-            { icon: Cpu, text: "AI Mencocokkan" },
-            { icon: Truck, text: "Logistik Mengirim" },
-            { icon: Store, text: "Retail Menerima" }
-          ].map((step, i) => (
-            <div key={i} className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-emerald-600 mb-4 border border-slate-100">
-                <step.icon size={32} />
+        
+        <div className="relative">
+          {/* Desktop Arrows */}
+          <div className="hidden lg:flex absolute top-1/2 left-0 w-full -translate-y-16 justify-around px-24 pointer-events-none">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="text-slate-300 animate-pulse">
+                <ChevronRight size={32} strokeWidth={3} />
               </div>
-              <span className="font-bold text-slate-700">{step.text}</span>
-              {i < 3 && <div className="hidden md:block absolute translate-x-24 translate-y-8 text-slate-300">→</div>}
-            </div>
-          ))}
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10">
+            {workflowSteps.map((step, i) => (
+              <div key={i} className="flex flex-col items-center text-center group">
+                <div className={`w-24 h-24 rounded-full ${step.bg} flex items-center justify-center mb-6 relative transition-transform duration-300 group-hover:scale-110`}>
+                  <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${step.color} flex items-center justify-center text-white shadow-xl ${step.shadow}`}>
+                    <step.icon size={40} strokeWidth={1.5} />
+                  </div>
+                  {/* Decorative Circuit Lines for AI Step */}
+                  {step.title === "AI Mencocokkan" && (
+                    <div className="absolute inset-0 border-2 border-cyan-200 border-dashed rounded-full animate-spin-slow opacity-50"></div>
+                  )}
+                </div>
+                <h3 className="font-bold text-slate-800 text-lg mb-2">{step.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed px-4">{step.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
