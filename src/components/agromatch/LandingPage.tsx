@@ -1,150 +1,134 @@
 "use client";
 
 import React from 'react';
-import { Wheat, Store, Truck, Cpu, ArrowRight, Zap, ChevronRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { ArrowRight, Zap } from 'lucide-react';
 
 interface LandingPageProps {
   onSelectRole: (role: string) => void;
 }
 
 const LandingPage = ({ onSelectRole }: LandingPageProps) => {
-  const stats = [
-    { label: "Wilayah Surplus", value: "4", color: "text-emerald-600", bg: "bg-emerald-50" },
-    { label: "Wilayah Defisit", value: "3", color: "text-rose-600", bg: "bg-rose-50" },
-    { label: "Pengiriman Aktif", value: "12", color: "text-indigo-600", bg: "bg-indigo-50" }
-  ];
-
-  const portals = [
-    { id: 'koperasi', title: 'Koperasi Tani', desc: 'Input hasil panen & akses bursa suplai.', icon: Wheat, color: 'bg-emerald-600' },
-    { id: 'retail', title: 'Retail / Pasar', desc: 'Input kebutuhan & monitor stok pangan.', icon: Store, color: 'bg-amber-600' },
-    { id: 'logistik', title: 'Mitra Logistik', desc: 'Kelola armada & rute distribusi.', icon: Truck, color: 'bg-indigo-600' },
-    { id: 'admin', title: 'Admin / Forecaster', desc: 'Matchmaking AI & analisis tren.', icon: Cpu, color: 'bg-slate-800' }
-  ];
-
-  const workflowSteps = [
-    {
-      title: "Koperasi Suplai Data",
-      desc: "Petani lokal menginput hasil panen segar ke sistem.",
-      icon: Wheat,
-      color: "from-emerald-400 to-emerald-600",
-      shadow: "shadow-emerald-200",
-      bg: "bg-emerald-50"
-    },
-    {
-      title: "AI Mencocokkan",
-      desc: "Algoritma cerdas mencari rute distribusi paling efisien.",
-      icon: Cpu,
-      color: "from-cyan-400 to-teal-500",
-      shadow: "shadow-cyan-200",
-      bg: "bg-cyan-50"
-    },
-    {
-      title: "Logistik Mengirim",
-      desc: "Armada logistik memobilisasi pangan ke titik defisit.",
-      icon: Truck,
-      color: "from-indigo-400 to-indigo-600",
-      shadow: "shadow-indigo-200",
-      bg: "bg-indigo-50"
-    },
-    {
-      title: "Retail Menerima",
-      desc: "Pasar menerima pasokan dengan harga yang stabil.",
-      icon: Store,
-      color: "from-amber-400 to-orange-500",
-      shadow: "shadow-amber-200",
-      bg: "bg-amber-50"
-    }
-  ];
-
   return (
-    <div className="animate-in fade-in duration-700">
-      {/* Hero Section */}
-      <section className="text-center py-16 px-4">
-        <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-bold mb-6 border border-emerald-100">
-          <Zap size={16} />
-          <span>Solusi Cerdas Atasi Defisit & Surplus Pangan Aceh</span>
+    <div className="animate-in fade-in duration-700 space-y-20">
+      {/* HERO SECTION & STATISTIK */}
+      <section className="text-center space-y-10">
+        <div className="space-y-4 max-w-3xl mx-auto">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+            <Zap size={14} className="fill-emerald-700" /> Solusi Cerdas Atasi Defisit & Surplus Pangan Aceh
+          </span>
+          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight">
+            Hub Pangan Terintegrasi <br />
+            <span className="text-emerald-600">Provinsi Aceh</span>
+          </h2>
+          <p className="text-gray-500 text-base md:text-lg">
+            Menghubungkan petani, pasar, dan logistik secara real-time menggunakan kecerdasan buatan untuk menjaga stabilitas harga dan pasokan.
+          </p>
         </div>
-        <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 tracking-tight mb-6">
-          Hub Pangan Terintegrasi <br />
-          <span className="text-emerald-600">Provinsi Aceh</span>
-        </h1>
-        <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-10">
-          Menghubungkan petani, pasar, dan logistik secara real-time menggunakan kecerdasan buatan untuk menjaga stabilitas harga dan pasokan.
-        </p>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-16">
-          {stats.map((stat, i) => (
-            <Card key={i} className="border-none shadow-sm">
-              <CardContent className={`p-6 rounded-2xl ${stat.bg}`}>
-                <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">{stat.label}</span>
-                <span className={`block text-4xl font-black mt-1 ${stat.color}`}>{stat.value}</span>
-              </CardContent>
-            </Card>
+        {/* GRID STATISTIK MODERN DENGAN VISUALISASI */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto text-left">
+          {/* Wilayah Surplus */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition flex flex-col justify-between h-48">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 block mb-1">Wilayah Surplus</span>
+              <div className="flex items-baseline space-x-2">
+                <span className="text-4xl font-extrabold text-emerald-600">4</span>
+                <span className="text-sm font-medium text-gray-500">Kabupaten/Kota</span>
+              </div>
+            </div>
+            <div className="w-full h-16 bg-emerald-50/50 rounded-xl flex items-center justify-center text-xs text-emerald-700 font-medium">
+              🗺️ Peta Distribusi Hijau Aktif
+            </div>
+          </div>
+
+          {/* Wilayah Defisit */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition flex flex-col justify-between h-48">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 block mb-1">Wilayah Defisit</span>
+              <div className="flex items-baseline space-x-2">
+                <span className="text-4xl font-extrabold text-rose-600">3</span>
+                <span className="text-sm font-medium text-gray-500">Kabupaten/Kota</span>
+              </div>
+            </div>
+            <div className="w-full h-16 bg-rose-50/50 rounded-xl flex items-center justify-center text-xs text-rose-700 font-medium">
+              🗺️ Peta Pantauan Defisit Merah
+            </div>
+          </div>
+
+          {/* Pengiriman Aktif */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition flex flex-col justify-between h-48">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 block mb-1">Pengiriman Aktif</span>
+              <div className="flex items-baseline space-x-2">
+                <span className="text-4xl font-extrabold text-blue-600">12</span>
+                <span className="text-sm font-medium text-gray-500">Armada Berjalan</span>
+              </div>
+            </div>
+            <div className="w-full h-16 bg-blue-50/50 rounded-xl flex items-center justify-center text-xs text-blue-700 font-medium">
+              📈 Grafik Tren Pengiriman 7 Hari Terakhir
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ALUR KERJA SECTION */}
+      <section className="bg-emerald-900 text-white rounded-3xl p-8 md:p-12 shadow-xl">
+        <div className="text-center space-y-2 mb-12">
+          <h3 className="text-2xl md:text-3xl font-bold">Alur Kerja AgroMatch</h3>
+          <p className="text-emerald-200 text-sm md:text-base max-w-xl mx-auto">Sistem otomatisasi distribusi pangan pintar dari hulu ke hilir secara transparan.</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative">
+          {[
+            { icon: "👨‍🌾", title: "Koperasi Suplai Data", desc: "Petani menginput hasil panen lokal." },
+            { icon: "🤖", title: "AI Mencocokkan", desc: "Sistem mencocokkan suplai & kebutuhan." },
+            { icon: "🚚", title: "Logistik Mengirim", desc: "Armada mendistribusikan secara efisien." },
+            { icon: "🏪", title: "Retail Menerima", desc: "Pasar menerima stok dengan harga stabil." }
+          ].map((step, i) => (
+            <div key={i} className="text-center space-y-4">
+              <div className="w-20 h-20 bg-white/10 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-inner border border-white/20">
+                {step.icon}
+              </div>
+              <div>
+                <h4 className="font-semibold text-lg text-emerald-100">{step.title}</h4>
+                <p className="text-xs text-emerald-200/80 mt-1">{step.desc}</p>
+              </div>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* Alur Kerja AgroMatch */}
-      <section className="bg-slate-50/50 rounded-[3rem] p-12 border border-slate-100 mb-16">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-slate-900">Alur Kerja AgroMatch</h2>
-          <p className="text-slate-500 mt-2">Sistem otomatisasi distribusi pangan dari hulu ke hilir.</p>
+      {/* PILIH PORTAL AKSES SECTION */}
+      <section className="space-y-8">
+        <div className="text-center space-y-2">
+          <h3 className="text-2xl md:text-3xl font-bold text-gray-900">Pilih Portal Akses</h3>
+          <p className="text-gray-500 text-sm">Masuk sesuai dengan peran dan tanggung jawab Anda dalam ekosistem.</p>
         </div>
-        
-        <div className="relative">
-          {/* Desktop Arrows */}
-          <div className="hidden lg:flex absolute top-1/2 left-0 w-full -translate-y-16 justify-around px-24 pointer-events-none">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="text-slate-300 animate-pulse">
-                <ChevronRight size={32} strokeWidth={3} />
-              </div>
-            ))}
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10">
-            {workflowSteps.map((step, i) => (
-              <div key={i} className="flex flex-col items-center text-center group">
-                <div className={`w-24 h-24 rounded-full ${step.bg} flex items-center justify-center mb-6 relative transition-transform duration-300 group-hover:scale-110`}>
-                  <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${step.color} flex items-center justify-center text-white shadow-xl ${step.shadow}`}>
-                    <step.icon size={40} strokeWidth={1.5} />
-                  </div>
-                  {/* Decorative Circuit Lines for AI Step */}
-                  {step.title === "AI Mencocokkan" && (
-                    <div className="absolute inset-0 border-2 border-cyan-200 border-dashed rounded-full animate-spin-slow opacity-50"></div>
-                  )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { id: 'koperasi', icon: "🌾", title: "Koperasi Tani", desc: "Input data hasil panen harian, pantau harga pokok, dan akses bursa suplai pangan.", color: "bg-emerald-600 hover:bg-emerald-700", iconBg: "bg-emerald-50 text-emerald-600" },
+            { id: 'retail', icon: "🏪", title: "Retail / Pasar", desc: "Input kebutuhan komoditas, monitor ketersediaan stok, dan jaga stabilitas pasar.", color: "bg-teal-600 hover:bg-teal-700", iconBg: "bg-teal-50 text-teal-600" },
+            { id: 'logistik', icon: "🚚", title: "Mitra Logistik", desc: "Kelola armada pengiriman, ambil manifes distribusi, dan optimasikan rute jalan.", color: "bg-blue-600 hover:bg-blue-700", iconBg: "bg-blue-50 text-blue-600" },
+            { id: 'admin', icon: "📊", title: "Admin / Forecaster", desc: "Kelola kecerdasan buatan (AI matchmaking), analisis tren pasar, dan laporan defisit.", color: "bg-gray-800 hover:bg-gray-900", iconBg: "bg-gray-100 text-gray-700" }
+          ].map((portal) => (
+            <div key={portal.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition duration-300 flex flex-col justify-between text-center space-y-6">
+              <div className="space-y-4">
+                <div className={`w-16 h-16 ${portal.iconBg} rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold shadow-sm`}>
+                  {portal.icon}
                 </div>
-                <h3 className="font-bold text-slate-800 text-lg mb-2">{step.title}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed px-4">{step.desc}</p>
+                <div>
+                  <h4 className="font-bold text-lg text-gray-900">{portal.title}</h4>
+                  <p className="text-xs text-gray-500 mt-2">{portal.desc}</p>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Portal Selection */}
-      <section className="mb-16">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-slate-900">Pilih Portal Akses</h2>
-          <p className="text-slate-500 mt-2">Masuk sesuai dengan peran Anda dalam ekosistem.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {portals.map((portal) => (
-            <button 
-              key={portal.id}
-              onClick={() => onSelectRole(portal.id)}
-              className="group text-left bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300"
-            >
-              <div className={`${portal.color} w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg group-hover:scale-110 transition-transform`}>
-                <portal.icon size={28} />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">{portal.title}</h3>
-              <p className="text-sm text-slate-500 mb-6 leading-relaxed">{portal.desc}</p>
-              <div className="flex items-center text-emerald-600 font-bold text-sm">
-                Masuk Portal <ArrowRight size={16} className="ml-2 group-hover:translate-x-2 transition-transform" />
-              </div>
-            </button>
+              <button 
+                onClick={() => onSelectRole(portal.id)}
+                className={`w-full ${portal.color} text-white font-medium text-sm py-2.5 px-4 rounded-xl shadow-sm transition flex items-center justify-center gap-2`}
+              >
+                Akses Portal <ArrowRight size={14} />
+              </button>
+            </div>
           ))}
         </div>
       </section>
