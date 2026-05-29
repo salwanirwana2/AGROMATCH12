@@ -8,109 +8,97 @@ interface LandingPageProps {
   onSelectRole: (role: string) => void;
 }
 
-const AcehMapVisual = ({ color, dots }: { color: string, dots: { x: number, y: number }[] }) => (
-  <div className="relative w-full h-32 mt-4 flex items-center justify-center overflow-hidden rounded-xl bg-slate-50/50">
-    <svg viewBox="0 0 100 100" className={`w-24 h-24 opacity-20 ${color}`}>
-      <path d="M20,80 L35,30 L50,15 L85,10 L95,40 L75,85 L40,95 Z" fill="currentColor" />
-    </svg>
-    {dots.map((dot, i) => (
-      <div 
-        key={i} 
-        className={`absolute w-2 h-2 rounded-full animate-pulse ${color.replace('text-', 'bg-')}`}
-        style={{ left: `${dot.x}%`, top: `${dot.y}%` }}
-      />
-    ))}
-  </div>
-);
-
-const MiniLineChart = () => (
-  <div className="w-full h-32 mt-4 flex items-end justify-center px-4 bg-slate-50/50 rounded-xl overflow-hidden">
-    <svg viewBox="0 0 100 40" className="w-full h-16 text-blue-500">
-      <path 
-        d="M0 35 Q 15 10, 30 25 T 60 5 T 100 20" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="3" 
-        strokeLinecap="round"
-        className="animate-in slide-in-from-left duration-1000"
-      />
-    </svg>
-  </div>
-);
-
 const LandingPage = ({ onSelectRole }: LandingPageProps) => {
+  const stats = [
+    { label: "Wilayah Surplus", value: "4", color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Wilayah Defisit", value: "3", color: "text-rose-600", bg: "bg-rose-50" },
+    { label: "Pengiriman Aktif", value: "12", color: "text-indigo-600", bg: "bg-indigo-50" }
+  ];
+
   const portals = [
-    { id: 'koperasi', title: 'Koperasi Tani', desc: 'Input hasil panen & akses bursa suplai.', icon: Wheat, color: 'bg-[#4CAF50]' },
-    { id: 'retail', title: 'Retail / Pasar', desc: 'Input kebutuhan & monitor stok pangan.', icon: Store, color: 'bg-amber-500' },
-    { id: 'logistik', title: 'Mitra Logistik', desc: 'Kelola armada & rute distribusi.', icon: Truck, color: 'bg-blue-500' },
+    { id: 'koperasi', title: 'Koperasi Tani', desc: 'Input hasil panen & akses bursa suplai.', icon: Wheat, color: 'bg-emerald-600' },
+    { id: 'retail', title: 'Retail / Pasar', desc: 'Input kebutuhan & monitor stok pangan.', icon: Store, color: 'bg-amber-600' },
+    { id: 'logistik', title: 'Mitra Logistik', desc: 'Kelola armada & rute distribusi.', icon: Truck, color: 'bg-indigo-600' },
     { id: 'admin', title: 'Admin / Forecaster', desc: 'Matchmaking AI & analisis tren.', icon: Cpu, color: 'bg-slate-800' }
   ];
 
   const workflowSteps = [
-    { title: "Koperasi Suplai Data", desc: "Petani lokal menginput hasil panen segar.", icon: Wheat, color: "from-green-400 to-green-600", bg: "bg-green-50" },
-    { title: "AI Mencocokkan", desc: "Algoritma cerdas mencari rute efisien.", icon: Cpu, color: "from-cyan-400 to-teal-500", bg: "bg-cyan-50" },
-    { title: "Logistik Mengirim", desc: "Armada memobilisasi pangan ke titik defisit.", icon: Truck, color: "from-blue-400 to-blue-600", bg: "bg-blue-50" },
-    { title: "Retail Menerima", desc: "Pasar menerima pasokan harga stabil.", icon: Store, color: "from-amber-400 to-orange-500", bg: "bg-amber-50" }
+    {
+      title: "Koperasi Suplai Data",
+      desc: "Petani lokal menginput hasil panen segar ke sistem.",
+      icon: Wheat,
+      color: "from-emerald-400 to-emerald-600",
+      shadow: "shadow-emerald-200",
+      bg: "bg-emerald-50"
+    },
+    {
+      title: "AI Mencocokkan",
+      desc: "Algoritma cerdas mencari rute distribusi paling efisien.",
+      icon: Cpu,
+      color: "from-cyan-400 to-teal-500",
+      shadow: "shadow-cyan-200",
+      bg: "bg-cyan-50"
+    },
+    {
+      title: "Logistik Mengirim",
+      desc: "Armada logistik memobilisasi pangan ke titik defisit.",
+      icon: Truck,
+      color: "from-indigo-400 to-indigo-600",
+      shadow: "shadow-indigo-200",
+      bg: "bg-indigo-50"
+    },
+    {
+      title: "Retail Menerima",
+      desc: "Pasar menerima pasokan dengan harga yang stabil.",
+      icon: Store,
+      color: "from-amber-400 to-orange-500",
+      shadow: "shadow-amber-200",
+      bg: "bg-amber-50"
+    }
   ];
 
   return (
-    <div className="animate-in fade-in duration-700 bg-white">
+    <div className="animate-in fade-in duration-700">
       {/* Hero Section */}
-      <section className="text-center py-20 px-4 max-w-5xl mx-auto">
-        <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter mb-6 leading-tight uppercase">
+      <section className="text-center py-16 px-4">
+        <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-bold mb-6 border border-emerald-100">
+          <Zap size={16} />
+          <span>Solusi Cerdas Atasi Defisit & Surplus Pangan Aceh</span>
+        </div>
+        <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 tracking-tight mb-6">
           Hub Pangan Terintegrasi <br />
-          <span className="text-[#4CAF50]">Provinsi Aceh</span>
+          <span className="text-emerald-600">Provinsi Aceh</span>
         </h1>
-        <p className="text-xl text-slate-500 font-medium max-w-2xl mx-auto mb-12">
-          Menghubungkan petani, pasar, dan logistik secara real-time untuk stabilitas pasokan.
+        <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-10">
+          Menghubungkan petani, pasar, dan logistik secara real-time menggunakan kecerdasan buatan untuk menjaga stabilitas harga dan pasokan.
         </p>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
-          <Card className="border-slate-100 shadow-xl shadow-slate-200/40 rounded-[2.5rem] overflow-hidden group hover:translate-y-[-4px] transition-transform">
-            <CardContent className="p-8">
-              <div className="flex justify-between items-start mb-2">
-                <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Wilayah Surplus</span>
-                <span className="text-3xl font-black text-green-600">(4)</span>
-              </div>
-              <AcehMapVisual color="text-green-500" dots={[{x: 40, y: 30}, {x: 60, y: 20}, {x: 30, y: 50}, {x: 70, y: 40}]} />
-            </CardContent>
-          </Card>
-          
-          <Card className="border-slate-100 shadow-xl shadow-slate-200/40 rounded-[2.5rem] overflow-hidden group hover:translate-y-[-4px] transition-transform">
-            <CardContent className="p-8">
-              <div className="flex justify-between items-start mb-2">
-                <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Wilayah Defisit</span>
-                <span className="text-3xl font-black text-red-600">(3)</span>
-              </div>
-              <AcehMapVisual color="text-red-500" dots={[{x: 50, y: 60}, {x: 20, y: 40}, {x: 80, y: 30}]} />
-            </CardContent>
-          </Card>
-
-          <Card className="border-slate-100 shadow-xl shadow-slate-200/40 rounded-[2.5rem] overflow-hidden group hover:translate-y-[-4px] transition-transform">
-            <CardContent className="p-8">
-              <div className="flex justify-between items-start mb-2">
-                <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Pengiriman Aktif</span>
-                <span className="text-3xl font-black text-blue-600">(12)</span>
-              </div>
-              <MiniLineChart />
-            </CardContent>
-          </Card>
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-16">
+          {stats.map((stat, i) => (
+            <Card key={i} className="border-none shadow-sm">
+              <CardContent className={`p-6 rounded-2xl ${stat.bg}`}>
+                <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">{stat.label}</span>
+                <span className={`block text-4xl font-black mt-1 ${stat.color}`}>{stat.value}</span>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </section>
 
       {/* Alur Kerja AgroMatch */}
-      <section className="bg-slate-50/50 rounded-[4rem] p-12 md:p-20 border border-slate-100 mb-20 max-w-7xl mx-auto">
+      <section className="bg-slate-50/50 rounded-[3rem] p-12 border border-slate-100 mb-16">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight">Alur Kerja AgroMatch</h2>
-          <p className="text-slate-500 font-medium mt-2">Sistem otomatisasi distribusi pangan dari hulu ke hilir.</p>
+          <h2 className="text-3xl font-bold text-slate-900">Alur Kerja AgroMatch</h2>
+          <p className="text-slate-500 mt-2">Sistem otomatisasi distribusi pangan dari hulu ke hilir.</p>
         </div>
         
         <div className="relative">
+          {/* Desktop Arrows */}
           <div className="hidden lg:flex absolute top-1/2 left-0 w-full -translate-y-16 justify-around px-24 pointer-events-none">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="text-slate-200">
-                <ChevronRight size={40} strokeWidth={3} />
+              <div key={i} className="text-slate-300 animate-pulse">
+                <ChevronRight size={32} strokeWidth={3} />
               </div>
             ))}
           </div>
@@ -118,13 +106,17 @@ const LandingPage = ({ onSelectRole }: LandingPageProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10">
             {workflowSteps.map((step, i) => (
               <div key={i} className="flex flex-col items-center text-center group">
-                <div className={`w-24 h-24 rounded-[2rem] ${step.bg} flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110 shadow-sm`}>
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center text-white shadow-lg`}>
-                    <step.icon size={32} strokeWidth={2} />
+                <div className={`w-24 h-24 rounded-full ${step.bg} flex items-center justify-center mb-6 relative transition-transform duration-300 group-hover:scale-110`}>
+                  <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${step.color} flex items-center justify-center text-white shadow-xl ${step.shadow}`}>
+                    <step.icon size={40} strokeWidth={1.5} />
                   </div>
+                  {/* Decorative Circuit Lines for AI Step */}
+                  {step.title === "AI Mencocokkan" && (
+                    <div className="absolute inset-0 border-2 border-cyan-200 border-dashed rounded-full animate-spin-slow opacity-50"></div>
+                  )}
                 </div>
-                <h3 className="font-bold text-slate-900 text-lg mb-2">{step.title}</h3>
-                <p className="text-sm text-slate-500 font-medium leading-relaxed px-4">{step.desc}</p>
+                <h3 className="font-bold text-slate-800 text-lg mb-2">{step.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed px-4">{step.desc}</p>
               </div>
             ))}
           </div>
@@ -132,24 +124,24 @@ const LandingPage = ({ onSelectRole }: LandingPageProps) => {
       </section>
 
       {/* Portal Selection */}
-      <section className="max-w-7xl mx-auto px-6 mb-20">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Pilih Portal Akses</h2>
-          <p className="text-slate-500 font-medium mt-2">Masuk sesuai dengan peran Anda dalam ekosistem.</p>
+      <section className="mb-16">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold text-slate-900">Pilih Portal Akses</h2>
+          <p className="text-slate-500 mt-2">Masuk sesuai dengan peran Anda dalam ekosistem.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {portals.map((portal) => (
             <button 
               key={portal.id}
               onClick={() => onSelectRole(portal.id)}
-              className="group text-left bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-lg shadow-slate-200/30 hover:shadow-2xl hover:border-[#4CAF50]/30 transition-all duration-500"
+              className="group text-left bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300"
             >
               <div className={`${portal.color} w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg group-hover:scale-110 transition-transform`}>
                 <portal.icon size={28} />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">{portal.title}</h3>
-              <p className="text-sm text-slate-500 font-medium mb-6 leading-relaxed">{portal.desc}</p>
-              <div className="flex items-center text-[#4CAF50] font-black text-xs uppercase tracking-widest">
+              <p className="text-sm text-slate-500 mb-6 leading-relaxed">{portal.desc}</p>
+              <div className="flex items-center text-emerald-600 font-bold text-sm">
                 Masuk Portal <ArrowRight size={16} className="ml-2 group-hover:translate-x-2 transition-transform" />
               </div>
             </button>
