@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { 
-  X, 
   Truck, 
   ShieldCheck, 
   MapPin, 
@@ -46,7 +45,6 @@ const FleetRegistrationModal = ({ isOpen, onClose }: FleetRegistrationModalProps
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulasi proses pengiriman data
     setTimeout(() => {
       setIsSubmitting(false);
       showSuccess("Pendaftaran Berhasil! Tim AgroMatch akan memverifikasi berkas armada Anda dalam 1x24 jam.");
@@ -71,7 +69,6 @@ const FleetRegistrationModal = ({ isOpen, onClose }: FleetRegistrationModalProps
             </div>
           </div>
           
-          {/* Progress Indicator */}
           <div className="flex mt-8 gap-2">
             {[1, 2, 3].map((i) => (
               <div 
