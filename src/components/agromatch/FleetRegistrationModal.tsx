@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from 'react';
 import { 
   Truck, 
@@ -146,10 +144,10 @@ const FleetRegistrationModal = ({ isOpen, onClose }: FleetRegistrationModalProps
                     <SelectValue placeholder="Pilih jenis armada terbanyak" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pickup">Pick-up / Gran Max (< 1.5 Ton)</SelectItem>
+                    <SelectItem value="pickup">Pick-up / Gran Max ({"<"} 1.5 Ton)</SelectItem>
                     <SelectItem value="engkel">Truk Engkel (CDE) (2 - 3 Ton)</SelectItem>
                     <SelectItem value="cdd">Colt Diesel Double (CDD) (4 - 5 Ton)</SelectItem>
-                    <SelectItem value="fuso">Fuso / Tronton (> 10 Ton)</SelectItem>
+                    <SelectItem value="fuso">Fuso / Tronton ({">"} 10 Ton)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
