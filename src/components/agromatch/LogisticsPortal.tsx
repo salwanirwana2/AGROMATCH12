@@ -1,16 +1,19 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Truck, Clock, Network, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import FleetRegistrationModal from './FleetRegistrationModal';
 
 interface LogisticsPortalProps {
   shipments: any[];
 }
 
 const LogisticsPortal = ({ shipments }: LogisticsPortalProps) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <div className="space-y-6">
       <Card className="border-slate-100 shadow-sm">
@@ -74,10 +77,19 @@ const LogisticsPortal = ({ shipments }: LogisticsPortalProps) => {
             <p className="text-indigo-200 text-xs mt-0.5">Integrasikan armada Anda untuk menjangkau jutaan rute pengiriman tani.</p>
           </div>
         </div>
-        <Button className="bg-indigo-500 hover:bg-indigo-400 text-white font-bold px-8 py-6 rounded-xl shadow-md">
+        <Button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-indigo-500 hover:bg-indigo-400 text-white font-bold px-8 py-6 rounded-xl shadow-md"
+        >
           Daftar Kemitraan Armada
         </Button>
       </div>
+
+      {/* Modal Pendaftaran */}
+      <FleetRegistrationModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </div>
   );
 };
