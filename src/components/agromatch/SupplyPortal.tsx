@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState } from 'react';
-import { PlusCircle, CloudUpload, MapPin, Camera, Edit3, Archive, Trash2, RefreshCcw } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { PlusCircle, CloudUpload, MapPin, Camera, Edit3, Archive, Trash2, RefreshCcw, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { showError } from '@/utils/toast';
 
 interface SupplyPortalProps {
   supplies: any[];
@@ -15,24 +16,71 @@ interface SupplyPortalProps {
 }
 
 const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({
     cooperative: "Koperasi Meuseuraya Pidie",
     region: "Pidie",
     commodity: "Beras",
     qty: "",
     price: "",
-    date: ""
+    date: "",
+    image: ""
   });
+
+  const handleFileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validasi Tipe
+    if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+      showError("Format file harus JPG atau PNG.");
+      return;
+    }
+
+    // Validasi Ukuran (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      showError("Ukuran file maksimal 2MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setImagePreview(base64String);
+      setFormData(prev => ({ ...prev, image: base64String }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setImagePreview(null);
+    setFormData(prev => ({ ...prev, image: "" }));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.qty || !formData.price || !formData.cooperative) return;
+    if (!formData.qty || !formData.price || !formData.cooperative) {
+      showError("Harap lengkapi data stok dan harga.");
+      return;
+    }
+    
     onAddSupply({
       ...formData,
       qty: parseFloat(formData.qty),
       price: parseFloat(formData.price)
     });
-    setFormData({ ...formData, qty: "", price: "", date: "" });
+
+    // Reset Form
+    setFormData({ ...formData, qty: "", price: "", date: "", image: "" });
+    setImagePreview(null);
   };
 
   const getEmoji = (commodity: string) => {
@@ -57,7 +105,6 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* KOLOM KIRI: INPUT TAMBAH BARANG */}
       <div className="lg:col-span-1 space-y-6">
         <Card className="border-slate-200 shadow-sm rounded-2xl overflow-hidden">
           <CardHeader className="border-b border-slate-100 bg-white py-4">
@@ -67,15 +114,40 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Upload Placeholder */}
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Foto Komoditas</label>
-                <div className="border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-2xl p-8 text-center cursor-pointer bg-slate-50/50 transition-all group">
-                  <div className="bg-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm group-hover:scale-110 transition-transform">
-                    <Camera className="text-slate-400 group-hover:text-emerald-500" size={20} />
-                  </div>
-                  <span className="text-xs font-bold text-emerald-600 block">+ Tambah Foto</span>
-                  <span className="text-[10px] text-slate-400 block mt-1">Maksimal 2MB (JPG, PNG)</span>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  accept="image/jpeg,image/png" 
+                  className="hidden" 
+                />
+                <div 
+                  onClick={handleFileClick}
+                  className={cn(
+                    "border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer transition-all group relative overflow-hidden min-h-[160px] flex flex-col items-center justify-center",
+                    imagePreview ? "border-emerald-500 bg-white" : "border-slate-200 hover:border-emerald-500 bg-slate-50/50"
+                  )}
+                >
+                  {imagePreview ? (
+                    <>
+                      <img src={imagePreview} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Button type="button" variant="destructive" size="icon" className="rounded-full h-8 w-8" onClick={removeImage}>
+                          <X size={16} />
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-white w-12 h-12 rounded-full flex items-center justify-center mb-2 shadow-sm group-hover:scale-110 transition-transform">
+                        <Camera className="text-slate-400 group-hover:text-emerald-500" size={20} />
+                      </div>
+                      <span className="text-xs font-bold text-emerald-600 block">+ Tambah Foto</span>
+                      <span className="text-[10px] text-slate-400 block mt-1">Maksimal 2MB (JPG, PNG)</span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -137,7 +209,6 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
         </Card>
       </div>
 
-      {/* KOLOM KANAN: ETALASE BARANG */}
       <div className="lg:col-span-2 space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -152,7 +223,6 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {supplies.map(sup => (
             <div key={sup.id} className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between group hover:shadow-md transition-all duration-300 relative">
-              {/* Out of Stock Overlay */}
               {sup.qty === 0 && (
                 <div className="absolute inset-0 bg-white/60 z-10 flex flex-col items-center justify-center backdrop-blur-[1px]">
                   <span className="bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg transform -rotate-3">
@@ -162,12 +232,15 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
               )}
 
               <div>
-                {/* Product Image Placeholder */}
                 <div className={cn(
-                  "h-40 flex items-center justify-center text-5xl relative transition-transform duration-500 group-hover:scale-105",
+                  "h-40 flex items-center justify-center text-5xl relative transition-transform duration-500 group-hover:scale-105 overflow-hidden",
                   getBgColor(sup.commodity)
                 )}>
-                  {getEmoji(sup.commodity)}
+                  {sup.image ? (
+                    <img src={sup.image} alt={sup.commodity} className="w-full h-full object-cover" />
+                  ) : (
+                    getEmoji(sup.commodity)
+                  )}
                   {sup.qty > 0 && (
                     <span className="absolute top-4 right-4 bg-emerald-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-sm uppercase tracking-tighter">
                       Aktif
@@ -226,14 +299,6 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
               </div>
             </div>
           ))}
-
-          {supplies.length === 0 && (
-            <div className="col-span-2 py-20 text-center bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
-              <div className="text-4xl mb-4">📦</div>
-              <h3 className="font-bold text-slate-900">Belum Ada Komoditas</h3>
-              <p className="text-sm text-slate-500 mt-1">Mulai upload hasil panen Anda untuk dilihat oleh pembeli.</p>
-            </div>
-          )}
         </div>
       </div>
     </div>

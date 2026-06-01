@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   ShoppingBag, 
   MapPin, 
   Truck, 
   User, 
   Phone, 
-  ChevronRight, 
   X, 
   CheckCircle2,
   Search,
@@ -20,34 +19,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { showSuccess } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 
-interface Product {
-  id: number;
-  commodity: string;
-  cooperative: string;
-  price: number;
-  qty: number;
-  region: string;
-  emoji: string;
-  color: string;
-}
-
 interface DemandPortalProps {
-  demands: any[]; // Existing demands from parent
+  demands: any[];
+  supplies: any[];
   onAddDemand: (demand: any) => void;
 }
 
-const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
-  // Simulated Data from Koperasi Tani
-  const [products] = useState<Product[]>([
-    { id: 1, commodity: "Beras Premium Tangse", cooperative: "Koperasi Meuseuraya Pidie", price: 11500, qty: 25, region: "Pidie", emoji: "🌾", color: "bg-amber-50" },
-    { id: 2, commodity: "Cabai Merah Keriting", cooperative: "Koperasi Tani Abdya", price: 38000, qty: 5, region: "Abdya", emoji: "🌶️", color: "bg-rose-50" },
-    { id: 3, commodity: "Bawang Merah Lokal", cooperative: "Koperasi Gayo Horti", price: 28000, qty: 12, region: "Bener Meriah", emoji: "🧅", color: "bg-purple-50" },
-    { id: 4, commodity: "Kentang Granola", cooperative: "Koperasi Dataran Tinggi", price: 14000, qty: 18, region: "Aceh Tengah", emoji: "🥔", color: "bg-orange-50" },
-  ]);
-
+const DemandPortal = ({ demands, supplies, onAddDemand }: DemandPortalProps) => {
   const [cartCount, setCartCount] = useState(0);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [orderQty, setOrderQty] = useState(1);
   const [selectedCourier, setSelectedCourier] = useState<string>('internal');
   
@@ -57,7 +38,7 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
     { id: 'jne', name: 'JNE Logistics', price: 75000, eta: '1-2 Hari', desc: 'Layanan Reguler' }
   ];
 
-  const handleBuyNow = (product: Product) => {
+  const handleBuyNow = (product: any) => {
     setSelectedProduct(product);
     setIsCheckoutOpen(true);
   };
@@ -70,7 +51,7 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
   const calculateTotal = () => {
     if (!selectedProduct) return 0;
     const courierPrice = couriers.find(c => c.id === selectedCourier)?.price || 0;
-    return (selectedProduct.price * orderQty * 1000) + courierPrice; // Assuming orderQty is in Tons, price per Kg
+    return (selectedProduct.price * orderQty * 1000) + courierPrice;
   };
 
   const confirmOrder = () => {
@@ -79,9 +60,28 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
     setCartCount(0);
   };
 
+  const getEmoji = (commodity: string) => {
+    switch (commodity) {
+      case 'Beras': return "🌾";
+      case 'Cabai Merah': return "🌶️";
+      case 'Bawang Merah': return "🧅";
+      case 'Kentang': return "🥔";
+      default: return "📦";
+    }
+  };
+
+  const getBgColor = (commodity: string) => {
+    switch (commodity) {
+      case 'Beras': return "bg-amber-50";
+      case 'Cabai Merah': return "bg-rose-50";
+      case 'Bawang Merah': return "bg-purple-50";
+      case 'Kentang': return "bg-orange-50";
+      default: return "bg-slate-50";
+    }
+  };
+
   return (
     <div className="space-y-8 pb-20">
-      {/* Header Navigasi Retail */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
         <div className="flex items-center space-x-4">
           <div className="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center text-teal-600">
@@ -114,7 +114,6 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
         </div>
       </div>
 
-      {/* Katalog Produk */}
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-bold text-slate-900">Katalog Komoditas Segar</h3>
@@ -122,15 +121,19 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
+          {supplies.map((product) => (
             <Card key={product.id} className="group border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 rounded-[2rem] overflow-hidden flex flex-col">
-              <div className={cn("h-48 flex items-center justify-center text-6xl transition-transform duration-500 group-hover:scale-110", product.color)}>
-                {product.emoji}
+              <div className={cn("h-48 flex items-center justify-center text-6xl transition-transform duration-500 group-hover:scale-110 overflow-hidden", getBgColor(product.commodity))}>
+                {product.image ? (
+                  <img src={product.image} alt={product.commodity} className="w-full h-full object-cover" />
+                ) : (
+                  getEmoji(product.commodity)
+                )}
               </div>
               <CardContent className="p-5 flex-grow flex flex-col justify-between">
                 <div className="space-y-2">
                   <div>
-                    <h4 className="font-bold text-slate-900 leading-tight">{product.commodity}</h4>
+                    <h4 className="font-bold text-slate-900 leading-tight">{product.commodity} Premium</h4>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">{product.cooperative}</p>
                   </div>
                   
@@ -172,7 +175,6 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
         </div>
       </div>
 
-      {/* Checkout Modal / Panel */}
       {isCheckoutOpen && selectedProduct && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -189,13 +191,16 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
             </div>
 
             <div className="p-6 overflow-y-auto space-y-8">
-              {/* Ringkasan Produk */}
               <div className="flex items-center space-x-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <div className={cn("w-16 h-16 rounded-xl flex items-center justify-center text-3xl", selectedProduct.color)}>
-                  {selectedProduct.emoji}
+                <div className={cn("w-16 h-16 rounded-xl flex items-center justify-center text-3xl overflow-hidden", getBgColor(selectedProduct.commodity))}>
+                  {selectedProduct.image ? (
+                    <img src={selectedProduct.image} alt={selectedProduct.commodity} className="w-full h-full object-cover" />
+                  ) : (
+                    getEmoji(selectedProduct.commodity)
+                  )}
                 </div>
                 <div className="flex-grow">
-                  <h4 className="font-bold text-slate-900">{selectedProduct.commodity}</h4>
+                  <h4 className="font-bold text-slate-900">{selectedProduct.commodity} Premium</h4>
                   <p className="text-xs text-slate-500">{selectedProduct.cooperative}</p>
                 </div>
                 <div className="text-right">
@@ -211,7 +216,6 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
                 </div>
               </div>
 
-              {/* Form Informasi */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <h5 className="text-sm font-bold text-slate-900 flex items-center">
@@ -239,7 +243,6 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
                 </div>
               </div>
 
-              {/* Kemitraan Logistik */}
               <div className="space-y-4">
                 <h5 className="text-sm font-bold text-slate-900 flex items-center">
                   <Truck size={16} className="mr-2 text-teal-600" /> Opsi Pengiriman Terdekat
@@ -269,7 +272,6 @@ const DemandPortal = ({ demands, onAddDemand }: DemandPortalProps) => {
               </div>
             </div>
 
-            {/* Footer Checkout */}
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
               <div>
                 <span className="text-xs text-slate-500 block">Total Pembayaran</span>

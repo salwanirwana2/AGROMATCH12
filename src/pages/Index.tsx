@@ -21,9 +21,9 @@ const Index = () => {
   
   // Simulated Database State
   const [supplies, setSupplies] = useState([
-    { id: 1, region: "Pidie", commodity: "Beras", qty: 150, price: 10500, date: "2026-06-10", cooperative: "Koperasi Meuseuraya Pidie" },
-    { id: 2, region: "Bener Meriah", commodity: "Kentang", qty: 45, price: 12000, date: "2026-06-12", cooperative: "Koperasi Gayo Horti" },
-    { id: 3, region: "Aceh Tengah", commodity: "Cabai Merah", qty: 20, price: 35000, date: "2026-06-08", cooperative: "Koperasi Tani Dataran Tinggi" }
+    { id: 1, region: "Pidie", commodity: "Beras", qty: 150, price: 10500, date: "2026-06-10", cooperative: "Koperasi Meuseuraya Pidie", image: "" },
+    { id: 2, region: "Bener Meriah", commodity: "Kentang", qty: 45, price: 12000, date: "2026-06-12", cooperative: "Koperasi Gayo Horti", image: "" },
+    { id: 3, region: "Aceh Tengah", commodity: "Cabai Merah", qty: 20, price: 35000, date: "2026-06-08", cooperative: "Koperasi Tani Dataran Tinggi", image: "" }
   ]);
 
   const [demands, setDemands] = useState([
@@ -50,7 +50,6 @@ const Index = () => {
     setUser(userData);
     setAppState('dashboard');
     
-    // Set default tab based on role
     if (userData.role === 'koperasi') setActiveTab('supply');
     else if (userData.role === 'retail') setActiveTab('demand');
     else if (userData.role === 'logistik') setActiveTab('logistics');
@@ -70,7 +69,7 @@ const Index = () => {
   const handleAddSupply = (newSupply: any) => {
     const item = { id: Date.now(), ...newSupply };
     setSupplies([item, ...supplies]);
-    showSuccess(`Pasokan ${item.commodity} berhasil didaftarkan!`);
+    showSuccess(`Komoditas ${item.commodity} berhasil dinaikkan ke Pasar!`);
   };
 
   const handleAddDemand = (newDemand: any) => {
@@ -142,7 +141,7 @@ const Index = () => {
             )}
 
             {activeTab === 'demand' && (
-              <DemandPortal demands={demands} onAddDemand={handleAddDemand} />
+              <DemandPortal demands={demands} supplies={supplies} onAddDemand={handleAddDemand} />
             )}
 
             {activeTab === 'logistics' && (
