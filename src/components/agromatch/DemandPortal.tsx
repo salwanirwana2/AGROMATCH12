@@ -95,9 +95,14 @@ const DemandPortal = ({ demands, supplies, cart, setCart, onAddToCart, onCreateO
   const getEmoji = (commodity: string) => {
     switch (commodity) {
       case 'Beras': return "🌾";
-      case 'Cabai Merah': return "🌶️";
       case 'Bawang Merah': return "🧅";
+      case 'Bawang Putih': return "🧄";
+      case 'Cabai Merah': return "🌶️";
+      case 'Cabai Hijau': return "🫑";
+      case 'Cabai Rawit': return "🔥";
       case 'Kentang': return "🥔";
+      case 'Jagung': return "🌽";
+      case 'Tomat': return "🍅";
       default: return "📦";
     }
   };
@@ -105,9 +110,14 @@ const DemandPortal = ({ demands, supplies, cart, setCart, onAddToCart, onCreateO
   const getBgColor = (commodity: string) => {
     switch (commodity) {
       case 'Beras': return "bg-amber-50";
-      case 'Cabai Merah': return "bg-rose-50";
       case 'Bawang Merah': return "bg-purple-50";
+      case 'Bawang Putih': return "bg-slate-50";
+      case 'Cabai Merah': return "bg-rose-50";
+      case 'Cabai Hijau': return "bg-emerald-50";
+      case 'Cabai Rawit': return "bg-orange-50";
       case 'Kentang': return "bg-orange-50";
+      case 'Jagung': return "bg-yellow-50";
+      case 'Tomat': return "bg-red-50";
       default: return "bg-slate-50";
     }
   };

@@ -15,6 +15,18 @@ interface SupplyPortalProps {
   onAddSupply: (supply: any) => void;
 }
 
+const COMMODITIES = [
+  "Beras",
+  "Bawang Merah",
+  "Bawang Putih",
+  "Cabai Merah",
+  "Cabai Hijau",
+  "Cabai Rawit",
+  "Kentang",
+  "Jagung",
+  "Tomat"
+];
+
 const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -22,7 +34,7 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
   const [formData, setFormData] = useState({
     cooperative: "Koperasi Meuseuraya Pidie",
     region: "Pidie",
-    commodity: "Beras",
+    commodity: "Beras", // Default value set to Beras
     qty: "",
     price: "",
     date: "",
@@ -37,13 +49,11 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validasi Tipe
     if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
       showError("Format file harus JPG atau PNG.");
       return;
     }
 
-    // Validasi Ukuran (2MB)
     if (file.size > 2 * 1024 * 1024) {
       showError("Ukuran file maksimal 2MB.");
       return;
@@ -78,7 +88,6 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
       price: parseFloat(formData.price)
     });
 
-    // Reset Form
     setFormData({ ...formData, qty: "", price: "", date: "", image: "" });
     setImagePreview(null);
   };
@@ -86,9 +95,14 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
   const getEmoji = (commodity: string) => {
     switch (commodity) {
       case 'Beras': return "🌾";
-      case 'Cabai Merah': return "🌶️";
       case 'Bawang Merah': return "🧅";
+      case 'Bawang Putih': return "🧄";
+      case 'Cabai Merah': return "🌶️";
+      case 'Cabai Hijau': return "🫑";
+      case 'Cabai Rawit': return "🔥";
       case 'Kentang': return "🥔";
+      case 'Jagung': return "🌽";
+      case 'Tomat': return "🍅";
       default: return "📦";
     }
   };
@@ -96,9 +110,14 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
   const getBgColor = (commodity: string) => {
     switch (commodity) {
       case 'Beras': return "bg-amber-50";
-      case 'Cabai Merah': return "bg-rose-50";
       case 'Bawang Merah': return "bg-purple-50";
+      case 'Bawang Putih': return "bg-slate-50";
+      case 'Cabai Merah': return "bg-rose-50";
+      case 'Cabai Hijau': return "bg-emerald-50";
+      case 'Cabai Rawit': return "bg-orange-50";
       case 'Kentang': return "bg-orange-50";
+      case 'Jagung': return "bg-yellow-50";
+      case 'Tomat': return "bg-red-50";
       default: return "bg-slate-50";
     }
   };
@@ -156,13 +175,12 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
                   <label className="text-xs font-bold text-slate-500">Nama Komoditas</label>
                   <Select value={formData.commodity} onValueChange={v => setFormData({...formData, commodity: v})}>
                     <SelectTrigger className="rounded-xl bg-slate-50 border-slate-200 focus:ring-emerald-500">
-                      <SelectValue />
+                      <SelectValue placeholder="Pilih Komoditas" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Beras">Beras Premium</SelectItem>
-                      <SelectItem value="Bawang Merah">Bawang Merah Lokal</SelectItem>
-                      <SelectItem value="Cabai Merah">Cabai Merah Keriting</SelectItem>
-                      <SelectItem value="Kentang">Kentang Granola</SelectItem>
+                      {COMMODITIES.map((item) => (
+                        <SelectItem key={item} value={item}>{item}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
