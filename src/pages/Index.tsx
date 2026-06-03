@@ -59,20 +59,16 @@ const Index = () => {
 
   // --- AI Forecasting Logic (Real-time Aggregation) ---
   const forecastingStats = useMemo(() => {
-    // Calculate Total Supply for Beras (in Ton)
     const totalBerasSupply = supplies
       .filter(s => s.commodity === "Beras")
       .reduce((acc, curr) => acc + curr.qty, 0);
 
-    // Calculate Total Demand for Beras (from Orders/Checkouts)
-    // Convert KG to Ton (1 Ton = 1000 KG)
     const totalBerasDemandFromOrders = orders
       .reduce((acc, order) => {
         const berasItem = order.items.find(i => i.commodity === "Beras");
         return acc + (berasItem ? berasItem.qty : 0);
       }, 0) / 1000;
 
-    // Add initial market demand (from demands state)
     const initialBerasDemand = demands
       .filter(d => d.commodity === "Beras")
       .reduce((acc, curr) => acc + curr.qty, 0);
@@ -168,6 +164,9 @@ const Index = () => {
           <LandingPage 
             onSelectRole={handleSelectRole} 
             forecastingStats={forecastingStats}
+            supplies={supplies}
+            orders={orders}
+            demands={demands}
           />
         )}
         {appState === 'login' && selectedRole && <LoginPage role={selectedRole} onLogin={handleLogin} onBack={() => setAppState('landing')} />}
