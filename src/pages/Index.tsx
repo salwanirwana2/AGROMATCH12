@@ -67,6 +67,7 @@ const Index = () => {
       if (error) {
         console.error("Error fetching commodities:", error);
       } else if (data) {
+        // Map database rows cleanly into the existing product card components
         const mappedSupplies = data.map(item => ({
           id: item.id,
           commodity: item.commodity_name,
