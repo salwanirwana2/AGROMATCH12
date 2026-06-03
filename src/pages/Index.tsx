@@ -19,6 +19,9 @@ const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   
+  // Global Cart State
+  const [cart, setCart] = useState<any[]>([]);
+
   // Simulated Database State
   const [supplies, setSupplies] = useState([
     { id: 1, region: "Pidie", commodity: "Beras", qty: 150, price: 10500, date: "2026-06-10", cooperative: "Koperasi Meuseuraya Pidie", image: "" },
@@ -31,8 +34,21 @@ const Index = () => {
     { id: 2, region: "Lhokseumawe", commodity: "Cabai Merah", qty: 35, maxPrice: 40000, date: "2026-06-09", client: "Pasar Pajak Inpres" }
   ]);
 
-  const [shipments, setShipments] = useState([
-    { id: 101, sender: "Koperasi Meuseuraya (Pidie)", receiver: "Pasar Induk Lambaro (Banda Aceh)", commodity: "Beras", qty: 100, logistics: "Trans Kutaraja Logistik", status: "Dalam Perjalanan", eta: "2 Jam" }
+  // Unified Orders State (Pending Matchmaking -> Approved for Shipping -> Shipping)
+  const [orders, setOrders] = useState<any[]>([
+    { 
+      id: "AM-101", 
+      items: [{ commodity: "Beras", qty: 100, price: 10500 }], 
+      buyerName: "Budi Santoso", 
+      buyerPhone: "08123456789", 
+      address: "Pasar Induk Lambaro, Banda Aceh",
+      region: "Banda Aceh",
+      totalWeight: 100,
+      totalPrice: 1100000,
+      status: "Approved for Shipping",
+      logistics: "Trans Kutaraja Logistik",
+      eta: "2 Jam"
+    }
   ]);
 
   const [alerts, setAlerts] = useState<AlertItem[]>([
@@ -65,6 +81,38 @@ const Index = () => {
     setActiveTab('dashboard');
   };
 
+  // Cart Handlers
+  const handleAddToCart = (product: any) => {
+    const existing = cart.find(item => item.id === product.id);
+    if (existing) {
+      setCart(cart.map(item => item.id === product.id ? { ...item, qty: item.qty + 5 } : item));
+    } else {
+      setCart([...cart, { ...product, qty: 5 }]);
+    }
+    showSuccess(`${product.commodity} ditambahkan ke keranjang`);
+  };
+
+  const handleCreateOrder = (orderData: any) => {
+    const newOrder = {
+      id: `AM-${Math.floor(1000 + Math.random() * 9000)}`,
+      ...orderData,
+      status: "Pending Matchmaking",
+      timestamp: Date.now()
+    };
+    setOrders([newOrder, ...orders]);
+    setCart([]); // Clear cart after checkout
+    showSuccess("Pesanan berhasil dibuat! Menunggu Matchmaking Admin.");
+  };
+
+  const handleApproveOrder = (orderId: string) => {
+    setOrders(orders.map(order => 
+      order.id === orderId 
+        ? { ...order, status: "Approved for Shipping", logistics: "Mitra Logistik AgroMatch", eta: "Menunggu Penjemputan" } 
+        : order
+    ));
+    showSuccess("Pesanan disetujui! Data diteruskan ke Mitra Logistik.");
+  };
+
   // Feature Handlers
   const handleAddSupply = (newSupply: any) => {
     const item = { id: Date.now(), ...newSupply };
@@ -84,18 +132,21 @@ const Index = () => {
     if (!supply || !demand) return;
 
     const matchedQty = Math.min(supply.qty, demand.qty);
-    const newShipment = {
-      id: Date.now(),
-      sender: `${supply.cooperative} (${supply.region})`,
-      receiver: `${demand.client} (${demand.region})`,
-      commodity: supply.commodity,
-      qty: matchedQty,
+    const newOrder = {
+      id: `AM-${Date.now()}`,
+      items: [{ commodity: supply.commodity, qty: matchedQty * 1000, price: supply.price }],
+      buyerName: demand.client,
+      buyerPhone: "0811-XXXX-XXXX",
+      address: demand.region,
+      region: demand.region,
+      totalWeight: matchedQty * 1000,
+      totalPrice: matchedQty * 1000 * supply.price,
+      status: "Approved for Shipping",
       logistics: "Trans Kutaraja Logistik",
-      status: "Diproses Armada",
       eta: "5 Jam"
     };
 
-    setShipments([newShipment, ...shipments]);
+    setOrders([newOrder, ...orders]);
     setSupplies(supplies.map(s => s.id === supplyId ? { ...s, qty: s.qty - matchedQty } : s).filter(s => s.qty > 0));
     setDemands(demands.map(d => d.id === demandId ? { ...d, qty: d.qty - matchedQty } : d).filter(d => d.qty > 0));
     showSuccess(`Match Berhasil! Armada sedang diproses.`);
@@ -131,8 +182,10 @@ const Index = () => {
               <Dashboard 
                 supplies={supplies} 
                 demands={demands} 
-                shipments={shipments} 
+                shipments={orders.filter(o => o.status === "Approved for Shipping" || o.status === "Shipping")} 
+                pendingOrders={orders.filter(o => o.status === "Pending Matchmaking")}
                 onAutoMatch={handleAutoMatch} 
+                onApproveOrder={handleApproveOrder}
               />
             )}
 
@@ -141,11 +194,19 @@ const Index = () => {
             )}
 
             {activeTab === 'demand' && (
-              <DemandPortal demands={demands} supplies={supplies} onAddDemand={handleAddDemand} />
+              <DemandPortal 
+                demands={demands} 
+                supplies={supplies} 
+                cart={cart}
+                setCart={setCart}
+                onAddToCart={handleAddToCart}
+                onCreateOrder={handleCreateOrder}
+                onAddDemand={handleAddDemand} 
+              />
             )}
 
             {activeTab === 'logistics' && (
-              <LogisticsPortal shipments={shipments} />
+              <LogisticsPortal shipments={orders.filter(o => o.status === "Approved for Shipping" || o.status === "Shipping")} />
             )}
 
             {activeTab === 'forecasting' && (

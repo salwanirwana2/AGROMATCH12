@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { TrendingDown, TrendingUp, Shuffle, Truck, RefreshCw, Wheat, Store } from 'lucide-react';
+import { TrendingDown, TrendingUp, Shuffle, Truck, RefreshCw, Wheat, Store, CheckCircle2, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,10 +10,12 @@ interface DashboardProps {
   supplies: any[];
   demands: any[];
   shipments: any[];
+  pendingOrders?: any[];
   onAutoMatch: (supplyId: number, demandId: number) => void;
+  onApproveOrder?: (orderId: string) => void;
 }
 
-const Dashboard = ({ supplies, demands, shipments, onAutoMatch }: DashboardProps) => {
+const Dashboard = ({ supplies, demands, shipments, pendingOrders = [], onAutoMatch, onApproveOrder }: DashboardProps) => {
   const potentialMatches = supplies.flatMap(sup => 
     demands
       .filter(dem => dem.commodity === sup.commodity && dem.qty > 0)
@@ -62,6 +64,54 @@ const Dashboard = ({ supplies, demands, shipments, onAutoMatch }: DashboardProps
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Pending Orders for Admin Matchmaking */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <Clock className="text-amber-500" size={24} /> Pesanan Menunggu Matchmaking
+          </h3>
+          <Badge className="bg-amber-100 text-amber-700 border-none">{pendingOrders.length} Tertunda</Badge>
+        </div>
+        
+        {pendingOrders.length === 0 ? (
+          <div className="bg-white p-10 rounded-[2rem] border border-dashed border-slate-200 text-center">
+            <p className="text-slate-400 font-medium">Tidak ada pesanan retail yang menunggu persetujuan.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            {pendingOrders.map((order) => (
+              <Card key={order.id} className="border-slate-100 shadow-sm rounded-3xl overflow-hidden">
+                <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-6">
+                  <div className="flex-grow space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Badge className="bg-slate-900 text-white border-none">{order.id}</Badge>
+                      <h4 className="font-bold text-slate-900">{order.buyerName} • {order.region}</h4>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {order.items.map((item: any, idx: number) => (
+                        <Badge key={idx} variant="secondary" className="bg-teal-50 text-teal-700 border-teal-100">
+                          {item.commodity} ({item.qty} KG)
+                        </Badge>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-500 italic">Alamat: {order.address}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2 min-w-[200px]">
+                    <span className="text-lg font-black text-teal-600">Rp {order.totalPrice.toLocaleString('id-ID')}</span>
+                    <Button 
+                      onClick={() => onApproveOrder?.(order.id)}
+                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl"
+                    >
+                      <CheckCircle2 className="mr-2 h-4 w-4" /> Setujui & Match
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Smart Matching Engine */}

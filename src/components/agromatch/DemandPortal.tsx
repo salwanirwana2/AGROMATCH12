@@ -10,27 +10,31 @@ import {
   X, 
   CheckCircle2,
   Search,
-  Store
+  Store,
+  AlertCircle,
+  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { showSuccess } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 
 interface DemandPortalProps {
   demands: any[];
   supplies: any[];
+  cart: any[];
+  setCart: (cart: any[]) => void;
+  onAddToCart: (product: any) => void;
+  onCreateOrder: (order: any) => void;
   onAddDemand: (demand: any) => void;
 }
 
-const DemandPortal = ({ demands, supplies, onAddDemand }: DemandPortalProps) => {
-  const [cartCount, setCartCount] = useState(0);
+const DemandPortal = ({ demands, supplies, cart, setCart, onAddToCart, onCreateOrder, onAddDemand }: DemandPortalProps) => {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [orderQty, setOrderQty] = useState(1);
   const [selectedCourier, setSelectedCourier] = useState<string>('internal');
+  const [buyerInfo, setBuyerInfo] = useState({ name: '', phone: '', address: '', region: 'Banda Aceh' });
   
   const couriers = [
     { id: 'internal', name: 'Kurir Internal Koperasi', price: 50000, eta: '3-5 Jam', desc: 'Rekomendasi Terdekat' },
@@ -38,26 +42,54 @@ const DemandPortal = ({ demands, supplies, onAddDemand }: DemandPortalProps) => 
     { id: 'jne', name: 'JNE Logistics', price: 75000, eta: '1-2 Hari', desc: 'Layanan Reguler' }
   ];
 
-  const handleBuyNow = (product: any) => {
-    setSelectedProduct(product);
-    setIsCheckoutOpen(true);
+  const updateItemQty = (id: number, newQty: number) => {
+    setCart(cart.map(item => item.id === id ? { ...item, qty: Math.max(0, newQty) } : item));
   };
 
-  const handleAddToCart = () => {
-    setCartCount(prev => prev + 1);
-    showSuccess("Produk ditambahkan ke keranjang");
+  const removeItem = (id: number) => {
+    setCart(cart.filter(item => item.id !== id));
+  };
+
+  const calculateSubtotal = () => {
+    return cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  };
+
+  const calculateTotalWeight = () => {
+    return cart.reduce((sum, item) => sum + item.qty, 0);
   };
 
   const calculateTotal = () => {
-    if (!selectedProduct) return 0;
     const courierPrice = couriers.find(c => c.id === selectedCourier)?.price || 0;
-    return (selectedProduct.price * orderQty * 1000) + courierPrice;
+    return calculateSubtotal() + courierPrice;
   };
 
-  const confirmOrder = () => {
-    showSuccess("Pesanan Pembelian Berhasil Dibuat!");
+  const isOrderValid = () => {
+    const hasItems = cart.length > 0;
+    const allItemsMin5kg = cart.every(item => item.qty >= 5);
+    const hasInfo = buyerInfo.name && buyerInfo.phone && buyerInfo.address;
+    return hasItems && allItemsMin5kg && hasInfo;
+  };
+
+  const handleConfirmOrder = () => {
+    if (!isOrderValid()) {
+      showError("Harap lengkapi data dan pastikan semua item minimal 5 KG.");
+      return;
+    }
+
+    const orderData = {
+      items: cart.map(item => ({ commodity: item.commodity, qty: item.qty, price: item.price })),
+      buyerName: buyerInfo.name,
+      buyerPhone: buyerInfo.phone,
+      address: buyerInfo.address,
+      region: buyerInfo.region,
+      totalWeight: calculateTotalWeight(),
+      totalPrice: calculateTotal(),
+      courier: couriers.find(c => c.id === selectedCourier)?.name
+    };
+
+    onCreateOrder(orderData);
     setIsCheckoutOpen(false);
-    setCartCount(0);
+    setBuyerInfo({ name: '', phone: '', address: '', region: 'Banda Aceh' });
   };
 
   const getEmoji = (commodity: string) => {
@@ -103,11 +135,14 @@ const DemandPortal = ({ demands, supplies, onAddDemand }: DemandPortalProps) => 
               className="pl-10 rounded-xl border-slate-200 w-full md:w-64"
             />
           </div>
-          <div className="relative cursor-pointer p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition">
-            <ShoppingBag className="text-slate-600" size={24} />
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-teal-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
-                {cartCount}
+          <div 
+            onClick={() => setIsCheckoutOpen(true)}
+            className="relative cursor-pointer p-2 bg-teal-600 rounded-xl hover:bg-teal-700 transition shadow-lg shadow-teal-100"
+          >
+            <ShoppingBag className="text-white" size={24} />
+            {cart.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
+                {cart.length}
               </span>
             )}
           </div>
@@ -147,26 +182,14 @@ const DemandPortal = ({ demands, supplies, onAddDemand }: DemandPortalProps) => 
                       <span className="text-sm font-bold text-slate-700">{product.qty} Ton</span>
                     </div>
                   </div>
-
-                  <div className="flex items-center text-[10px] text-slate-500 bg-slate-50 p-2 rounded-lg">
-                    <MapPin size={10} className="mr-1 text-rose-500" /> Asal: {product.region}
-                  </div>
                 </div>
 
-                <div className="mt-5 flex gap-2">
+                <div className="mt-5">
                   <Button 
-                    variant="outline" 
-                    size="icon" 
-                    onClick={handleAddToCart}
-                    className="rounded-xl border-slate-200 hover:bg-teal-50 hover:text-teal-600 hover:border-teal-100"
+                    onClick={() => onAddToCart(product)}
+                    className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-md flex items-center justify-center gap-2"
                   >
-                    <ShoppingBag size={18} />
-                  </Button>
-                  <Button 
-                    onClick={() => handleBuyNow(product)}
-                    className="flex-grow bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-md"
-                  >
-                    Beli Langsung
+                    <ShoppingBag size={18} /> Tambah ke Keranjang
                   </Button>
                 </div>
               </CardContent>
@@ -175,15 +198,15 @@ const DemandPortal = ({ demands, supplies, onAddDemand }: DemandPortalProps) => 
         </div>
       </div>
 
-      {isCheckoutOpen && selectedProduct && (
+      {isCheckoutOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-white w-full max-w-3xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="bg-teal-600 p-6 text-white flex justify-between items-center">
               <div className="flex items-center space-x-3">
                 <div className="bg-white/20 p-2 rounded-xl">
                   <ShoppingBag size={20} />
                 </div>
-                <h3 className="font-bold text-lg">Checkout Pembelian</h3>
+                <h3 className="font-bold text-lg">Checkout Keranjang Belanja</h3>
               </div>
               <button onClick={() => setIsCheckoutOpen(false)} className="hover:bg-white/20 p-2 rounded-full transition">
                 <X size={20} />
@@ -191,29 +214,53 @@ const DemandPortal = ({ demands, supplies, onAddDemand }: DemandPortalProps) => 
             </div>
 
             <div className="p-6 overflow-y-auto space-y-8">
-              <div className="flex items-center space-x-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <div className={cn("w-16 h-16 rounded-xl flex items-center justify-center text-3xl overflow-hidden", getBgColor(selectedProduct.commodity))}>
-                  {selectedProduct.image ? (
-                    <img src={selectedProduct.image} alt={selectedProduct.commodity} className="w-full h-full object-cover" />
-                  ) : (
-                    getEmoji(selectedProduct.commodity)
-                  )}
-                </div>
-                <div className="flex-grow">
-                  <h4 className="font-bold text-slate-900">{selectedProduct.commodity} Premium</h4>
-                  <p className="text-xs text-slate-500">{selectedProduct.cooperative}</p>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center space-x-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">Jumlah (Ton)</label>
-                    <Input 
-                      type="number" 
-                      value={orderQty} 
-                      onChange={(e) => setOrderQty(Number(e.target.value))}
-                      className="w-16 h-8 text-center rounded-lg border-slate-200"
-                    />
+              {/* Cart Items List */}
+              <div className="space-y-4">
+                <h5 className="text-sm font-bold text-slate-900 flex items-center">
+                  <ShoppingBag size={16} className="mr-2 text-teal-600" /> Daftar Belanja
+                </h5>
+                {cart.length === 0 ? (
+                  <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                    <p className="text-slate-400 text-sm">Keranjang Anda kosong.</p>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-3">
+                    {cart.map((item) => (
+                      <div key={item.id} className="flex items-center space-x-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <div className={cn("w-14 h-14 rounded-xl flex items-center justify-center text-2xl overflow-hidden", getBgColor(item.commodity))}>
+                          {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : getEmoji(item.commodity)}
+                        </div>
+                        <div className="flex-grow">
+                          <h4 className="font-bold text-slate-900 text-sm">{item.commodity} Premium</h4>
+                          <p className="text-[10px] text-slate-500">{item.cooperative}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="flex items-center space-x-2">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">JUMLAH (KG)</label>
+                            <div className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
+                              <button onClick={() => updateItemQty(item.id, item.qty - 1)} className="px-2 py-1 hover:bg-slate-100">-</button>
+                              <Input 
+                                type="number" 
+                                value={item.qty} 
+                                onChange={(e) => updateItemQty(item.id, Number(e.target.value))}
+                                className="w-12 h-8 text-center border-none focus:ring-0 text-xs font-bold"
+                              />
+                              <button onClick={() => updateItemQty(item.id, item.qty + 1)} className="px-2 py-1 hover:bg-slate-100">+</button>
+                            </div>
+                          </div>
+                          {item.qty < 5 && (
+                            <span className="text-[9px] text-rose-500 font-bold flex items-center gap-1">
+                              <AlertCircle size={10} /> Minimal pembelian adalah 5 KG
+                            </span>
+                          )}
+                        </div>
+                        <button onClick={() => removeItem(item.id)} className="text-slate-300 hover:text-rose-500 transition">
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -222,10 +269,20 @@ const DemandPortal = ({ demands, supplies, onAddDemand }: DemandPortalProps) => 
                     <User size={16} className="mr-2 text-teal-600" /> Informasi Penerima
                   </h5>
                   <div className="space-y-3">
-                    <Input placeholder="Nama Lengkap Kontak" className="rounded-xl border-slate-200" />
+                    <Input 
+                      placeholder="Nama Lengkap Kontak" 
+                      className="rounded-xl border-slate-200" 
+                      value={buyerInfo.name}
+                      onChange={e => setBuyerInfo({...buyerInfo, name: e.target.value})}
+                    />
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                      <Input placeholder="Nomor HP Aktif" className="pl-10 rounded-xl border-slate-200" />
+                      <Input 
+                        placeholder="Nomor HP Aktif" 
+                        className="pl-10 rounded-xl border-slate-200" 
+                        value={buyerInfo.phone}
+                        onChange={e => setBuyerInfo({...buyerInfo, phone: e.target.value})}
+                      />
                     </div>
                   </div>
                 </div>
@@ -238,6 +295,8 @@ const DemandPortal = ({ demands, supplies, onAddDemand }: DemandPortalProps) => 
                     <textarea 
                       placeholder="Alamat spesifik retail/pasar..." 
                       className="w-full h-24 p-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                      value={buyerInfo.address}
+                      onChange={e => setBuyerInfo({...buyerInfo, address: e.target.value})}
                     ></textarea>
                   </div>
                 </div>
@@ -264,7 +323,6 @@ const DemandPortal = ({ demands, supplies, onAddDemand }: DemandPortalProps) => 
                         {selectedCourier === courier.id && <CheckCircle2 size={14} className="text-teal-600" />}
                       </div>
                       <h6 className="text-xs font-bold text-slate-900">{courier.name}</h6>
-                      <p className="text-[10px] text-slate-500 mt-1">{courier.desc}</p>
                       <p className="text-xs font-bold text-slate-900 mt-2">Rp {courier.price.toLocaleString('id-ID')}</p>
                     </div>
                   ))}
@@ -273,13 +331,17 @@ const DemandPortal = ({ demands, supplies, onAddDemand }: DemandPortalProps) => 
             </div>
 
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div>
-                <span className="text-xs text-slate-500 block">Total Pembayaran</span>
+              <div className="flex flex-col">
+                <span className="text-[10px] text-slate-400 font-bold uppercase">Total Berat: {calculateTotalWeight()} KG</span>
                 <span className="text-2xl font-black text-teal-600">Rp {calculateTotal().toLocaleString('id-ID')}</span>
               </div>
               <Button 
-                onClick={confirmOrder}
-                className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white font-bold px-10 py-6 rounded-2xl shadow-lg"
+                onClick={handleConfirmOrder}
+                disabled={!isOrderValid()}
+                className={cn(
+                  "w-full sm:w-auto font-bold px-10 py-6 rounded-2xl shadow-lg transition-all",
+                  isOrderValid() ? "bg-teal-600 hover:bg-teal-700 text-white" : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                )}
               >
                 Konfirmasi & Buat Pesanan
               </Button>
