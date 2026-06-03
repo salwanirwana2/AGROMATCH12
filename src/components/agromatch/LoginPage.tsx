@@ -125,15 +125,17 @@ const LoginPage = ({ role, onLogin, onBack }: LoginPageProps) => {
                   Gunakan Akun Demo (Bypass)
                 </Button>
 
-                <div className="text-center">
-                  <button 
-                    type="button"
-                    onClick={() => setIsRegistering(true)}
-                    className="text-sm font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
-                  >
-                    Belum punya akun? Daftar di sini
-                  </button>
-                </div>
+                {role !== 'admin' && (
+                  <div className="text-center">
+                    <button 
+                      type="button"
+                      onClick={() => setIsRegistering(true)}
+                      className="text-sm font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
+                    >
+                      Belum punya akun? Daftar di sini
+                    </button>
+                  </div>
+                )}
               </div>
             </form>
           )}
