@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Header from '@/components/agromatch/Header';
 import Alerts, { AlertItem } from '@/components/agromatch/Alerts';
 import Dashboard from '@/components/agromatch/Dashboard';
@@ -57,13 +57,39 @@ const Index = () => {
     { id: 1, region: "Banda Aceh", commodity: "Beras", qty: 180, maxPrice: 12000, date: "2026-06-12", client: "Pasar Induk Lambaro" }
   ]);
 
+  // --- AI Forecasting Logic (Real-time Aggregation) ---
+  const forecastingStats = useMemo(() => {
+    // Calculate Total Supply for Beras (in Ton)
+    const totalBerasSupply = supplies
+      .filter(s => s.commodity === "Beras")
+      .reduce((acc, curr) => acc + curr.qty, 0);
+
+    // Calculate Total Demand for Beras (from Orders/Checkouts)
+    // Convert KG to Ton (1 Ton = 1000 KG)
+    const totalBerasDemandFromOrders = orders
+      .reduce((acc, order) => {
+        const berasItem = order.items.find(i => i.commodity === "Beras");
+        return acc + (berasItem ? berasItem.qty : 0);
+      }, 0) / 1000;
+
+    // Add initial market demand (from demands state)
+    const initialBerasDemand = demands
+      .filter(d => d.commodity === "Beras")
+      .reduce((acc, curr) => acc + curr.qty, 0);
+
+    return {
+      commodity: "Beras",
+      region: "Banda Aceh",
+      totalSupply: totalBerasSupply,
+      totalDemand: totalBerasDemandFromOrders + initialBerasDemand
+    };
+  }, [supplies, orders, demands]);
+
   const [alerts, setAlerts] = useState<AlertItem[]>([
     { id: 1, type: "danger", text: "Banda Aceh berpotensi DEFISIT Beras sebesar 30 Ton." }
   ]);
 
   // --- Order Workflow Handlers ---
-
-  // Step 1: Create Order (Retail Portal)
   const handleCreateOrder = (orderData: any) => {
     const newOrder: Order = {
       id: `AM-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -75,7 +101,6 @@ const Index = () => {
     showSuccess("Pesanan dibuat! Menunggu Matchmaking Admin.");
   };
 
-  // Step 2: Admin Approval (Admin Portal)
   const handleApproveOrder = (orderId: string) => {
     setOrders(prev => prev.map(order => 
       order.id === orderId 
@@ -83,7 +108,7 @@ const Index = () => {
             ...order, 
             status: "MATCHED_READY_FOR_SHIPPING", 
             adminApprovalTimestamp: Date.now(),
-            matchedSource: "Koperasi Meuseuraya Pidie", // Mock matched source
+            matchedSource: "Koperasi Meuseuraya Pidie",
             logistics: "Mitra Logistik AgroMatch",
             eta: "Menunggu Penjemputan"
           } 
@@ -131,7 +156,6 @@ const Index = () => {
   };
 
   const handleAutoMatch = (supplyId: number, demandId: number) => {
-    // Logic for AI Auto-match (Admin only)
     showSuccess("AI Matchmaking Berhasil!");
   };
 
@@ -140,7 +164,12 @@ const Index = () => {
       <Header activeTab={activeTab} setActiveTab={setActiveTab} user={user} onLogout={handleLogout} />
 
       <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
-        {appState === 'landing' && <LandingPage onSelectRole={handleSelectRole} />}
+        {appState === 'landing' && (
+          <LandingPage 
+            onSelectRole={handleSelectRole} 
+            forecastingStats={forecastingStats}
+          />
+        )}
         {appState === 'login' && selectedRole && <LoginPage role={selectedRole} onLogin={handleLogin} onBack={() => setAppState('landing')} />}
         
         {appState === 'dashboard' && user && (

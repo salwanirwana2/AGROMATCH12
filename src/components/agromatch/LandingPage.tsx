@@ -2,12 +2,19 @@
 
 import React from 'react';
 import { ArrowRight, Zap } from 'lucide-react';
+import ForecastingWidget from './ForecastingWidget';
 
 interface LandingPageProps {
   onSelectRole: (role: string) => void;
+  forecastingStats: {
+    commodity: string;
+    region: string;
+    totalSupply: number;
+    totalDemand: number;
+  };
 }
 
-const LandingPage = ({ onSelectRole }: LandingPageProps) => {
+const LandingPage = ({ onSelectRole, forecastingStats }: LandingPageProps) => {
   return (
     <div className="animate-in fade-in duration-700 space-y-20">
       {/* HERO SECTION & STATISTIK */}
@@ -70,6 +77,16 @@ const LandingPage = ({ onSelectRole }: LandingPageProps) => {
           </div>
         </div>
       </section>
+
+      {/* AI FORECASTING WIDGET SECTION (NEW) */}
+      <div className="max-w-5xl mx-auto">
+        <ForecastingWidget 
+          commodity={forecastingStats.commodity}
+          region={forecastingStats.region}
+          totalSupply={forecastingStats.totalSupply}
+          totalDemand={forecastingStats.totalDemand}
+        />
+      </div>
 
       {/* ALUR KERJA SECTION */}
       <section className="bg-emerald-900 text-white rounded-3xl p-8 md:p-12 shadow-xl">
