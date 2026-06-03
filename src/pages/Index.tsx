@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import Header from '@/components/agromatch/Header';
 import Alerts, { AlertItem } from '@/components/agromatch/Alerts';
 import Dashboard from '@/components/agromatch/Dashboard';
@@ -11,8 +11,7 @@ import ForecastingPortal from '@/components/agromatch/ForecastingPortal';
 import LandingPage from '@/components/agromatch/LandingPage';
 import LoginPage from '@/components/agromatch/LoginPage';
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { showSuccess, showError } from '@/utils/toast';
-import { supabase } from "@/integrations/supabase/client";
+import { showSuccess, showInfo } from '@/utils/toast';
 
 // --- TypeScript Interfaces ---
 export type OrderStatus = "PENDING_MATCHMAKING" | "MATCHED_READY_FOR_SHIPPING" | "SHIPPING" | "DELIVERED";
@@ -48,43 +47,15 @@ const Index = () => {
   // Global State
   const [cart, setCart] = useState<any[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [supplies, setSupplies] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [supplies, setSupplies] = useState([
+    { id: 1, region: "Pidie", commodity: "Beras", qty: 150, price: 10500, date: "2026-06-10", cooperative: "Koperasi Meuseuraya Pidie", image: "" },
+    { id: 2, region: "Bener Meriah", commodity: "Kentang", qty: 45, price: 12000, date: "2026-06-12", cooperative: "Koperasi Gayo Horti", image: "" },
+    { id: 3, region: "Aceh Tengah", commodity: "Cabai Merah", qty: 20, price: 35000, date: "2026-06-08", cooperative: "Koperasi Tani Dataran Tinggi", image: "" }
+  ]);
 
   const [demands, setDemands] = useState([
     { id: 1, region: "Banda Aceh", commodity: "Beras", qty: 180, maxPrice: 12000, date: "2026-06-12", client: "Pasar Induk Lambaro" }
   ]);
-
-  // Fetch supplies from Supabase
-  useEffect(() => {
-    const fetchSupplies = async () => {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error("Error fetching supplies:", error);
-      } else if (data) {
-        // Map database columns to app state
-        const mappedSupplies = data.map(item => ({
-          id: item.id,
-          commodity: item.category || "Komoditas",
-          cooperative: item.name || "Koperasi Tani",
-          qty: item.quantity || 0,
-          price: item.price || 0,
-          region: "Aceh", // Default region if not in DB
-          date: new Date(item.created_at).toLocaleDateString(),
-          image: ""
-        }));
-        setSupplies(mappedSupplies);
-      }
-      setIsLoading(false);
-    };
-
-    fetchSupplies();
-  }, []);
 
   // --- AI Forecasting Logic (Real-time Aggregation) ---
   const forecastingStats = useMemo(() => {
@@ -175,41 +146,9 @@ const Index = () => {
     showSuccess(`${product.commodity} ditambahkan ke keranjang`);
   };
 
-  const handleAddSupply = async (newSupply: any) => {
-    // Save to Supabase
-    const { data, error } = await supabase
-      .from('products')
-      .insert([
-        {
-          category: newSupply.commodity,
-          name: newSupply.cooperative,
-          quantity: newSupply.qty,
-          price: newSupply.price,
-          farmer_id: user?.id || null // Use user ID if available
-        }
-      ])
-      .select();
-
-    if (error) {
-      console.error("Error saving supply:", error);
-      showError("Gagal menyimpan data ke database.");
-      return;
-    }
-
-    if (data) {
-      const savedItem = {
-        id: data[0].id,
-        commodity: data[0].category,
-        cooperative: data[0].name,
-        qty: data[0].quantity,
-        price: data[0].price,
-        region: newSupply.region,
-        date: new Date(data[0].created_at).toLocaleDateString(),
-        image: newSupply.image
-      };
-      setSupplies(prev => [savedItem, ...prev]);
-      showSuccess(`Komoditas ${newSupply.commodity} berhasil disimpan secara permanen!`);
-    }
+  const handleAddSupply = (newSupply: any) => {
+    setSupplies(prev => [{ id: Date.now(), ...newSupply }, ...prev]);
+    showSuccess(`Komoditas ${newSupply.commodity} berhasil dinaikkan!`);
   };
 
   const handleAutoMatch = (supplyId: number, demandId: number) => {
