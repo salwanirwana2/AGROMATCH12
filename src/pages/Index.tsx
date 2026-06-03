@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Header from '@/components/agromatch/Header';
 import Alerts, { AlertItem } from '@/components/agromatch/Alerts';
 import Dashboard from '@/components/agromatch/Dashboard';
@@ -11,7 +11,8 @@ import ForecastingPortal from '@/components/agromatch/ForecastingPortal';
 import LandingPage from '@/components/agromatch/LandingPage';
 import LoginPage from '@/components/agromatch/LoginPage';
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { showSuccess, showInfo } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
+import { supabase } from "@/integrations/supabase/client";
 
 // --- TypeScript Interfaces ---
 export type OrderStatus = "PENDING_MATCHMAKING" | "MATCHED_READY_FOR_SHIPPING" | "SHIPPING" | "DELIVERED";
@@ -47,15 +48,140 @@ const Index = () => {
   // Global State
   const [cart, setCart] = useState<any[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [supplies, setSupplies] = useState([
-    { id: 1, region: "Pidie", commodity: "Beras", qty: 150, price: 10500, date: "2026-06-10", cooperative: "Koperasi Meuseuraya Pidie", image: "" },
-    { id: 2, region: "Bener Meriah", commodity: "Kentang", qty: 45, price: 12000, date: "2026-06-12", cooperative: "Koperasi Gayo Horti", image: "" },
-    { id: 3, region: "Aceh Tengah", commodity: "Cabai Merah", qty: 20, price: 35000, date: "2026-06-08", cooperative: "Koperasi Tani Dataran Tinggi", image: "" }
-  ]);
+  const [supplies, setSupplies] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [demands, setDemands] = useState([
     { id: 1, region: "Banda Aceh", commodity: "Beras", qty: 180, maxPrice: 12000, date: "2026-06-12", client: "Pasar Induk Lambaro" }
   ]);
+
+  // --- Isolated Data Fetching (Retail / Pasar Portal) ---
+  useEffect(() => {
+    const fetchCommodities = async () => {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('commodities')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching commodities:", error);
+      } else if (data) {
+        // Map database rows cleanly into the existing product card components
+        const mappedSupplies = data.map(item => ({
+          id: item.id,
+          commodity: item.commodity_name,
+          cooperative: item.cooperative_name || "Koperasi Tani",
+          qty: item.stock,
+          price: item.price,
+          region: item.region || "Aceh",
+          date: item.harvest_date,
+          image: item.image_url
+        }));
+        setSupplies(mappedSupplies);
+      }
+      setIsLoading(false);
+    };
+
+    fetchCommodities();
+  }, []);
+
+  // --- AI Forecasting Logic ---
+  const forecastingStats = useMemo(() => {
+    const totalBerasSupply = supplies
+      .filter(s => s.commodity === "Beras")
+      .reduce((acc, curr) => acc + curr.qty, 0);
+
+    const totalBerasDemandFromOrders = orders
+      .reduce((acc, order) => {
+        const berasItem = order.items.<dyad-write path="src/pages/Index.tsx" description="Completing the Index.tsx file with Supabase integration for live commodity data.">
+"use client";
+
+import React, { useState, useMemo, useEffect } from 'react';
+import Header from '@/components/agromatch/Header';
+import Alerts, { AlertItem } from '@/components/agromatch/Alerts';
+import Dashboard from '@/components/agromatch/Dashboard';
+import SupplyPortal from '@/components/agromatch/SupplyPortal';
+import DemandPortal from '@/components/agromatch/DemandPortal';
+import LogisticsPortal from '@/components/agromatch/LogisticsPortal';
+import ForecastingPortal from '@/components/agromatch/ForecastingPortal';
+import LandingPage from '@/components/agromatch/LandingPage';
+import LoginPage from '@/components/agromatch/LoginPage';
+import { MadeWithDyad } from "@/components/made-with-dyad";
+import { showSuccess, showError } from '@/utils/toast';
+import { supabase } from "@/integrations/supabase/client";
+
+// --- TypeScript Interfaces ---
+export type OrderStatus = "PENDING_MATCHMAKING" | "MATCHED_READY_FOR_SHIPPING" | "SHIPPING" | "DELIVERED";
+
+export interface OrderItem {
+  commodity: string;
+  qty: number; // in KG
+  price: number;
+}
+
+export interface Order {
+  id: string;
+  buyerName: string;
+  buyerPhone: string;
+  address: string;
+  region: string;
+  items: OrderItem[];
+  totalWeight: number;
+  totalPrice: number;
+  status: OrderStatus;
+  adminApprovalTimestamp?: number;
+  matchedSource?: string;
+  logistics?: string;
+  eta?: string;
+}
+
+const Index = () => {
+  const [appState, setAppState] = useState<'landing' | 'login' | 'dashboard'>('landing');
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  
+  // Global State
+  const [cart, setCart] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [supplies, setSupplies] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [demands, setDemands] = useState([
+    { id: 1, region: "Banda Aceh", commodity: "Beras", qty: 180, maxPrice: 12000, date: "2026-06-12", client: "Pasar Induk Lambaro" }
+  ]);
+
+  // --- Isolated Data Fetching (Retail / Pasar Portal) ---
+  useEffect(() => {
+    const fetchCommodities = async () => {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('commodities')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching commodities:", error);
+      } else if (data) {
+        // Map database rows cleanly into the existing product card components
+        const mappedSupplies = data.map(item => ({
+          id: item.id,
+          commodity: item.commodity_name,
+          cooperative: item.cooperative_name || "Koperasi Tani",
+          qty: item.stock,
+          price: item.price,
+          region: item.region || "Aceh",
+          date: item.harvest_date,
+          image: item.image_url
+        }));
+        setSupplies(mappedSupplies);
+      }
+      setIsLoading(false);
+    };
+
+    fetchCommodities();
+  }, []);
 
   // --- AI Forecasting Logic (Real-time Aggregation) ---
   const forecastingStats = useMemo(() => {
@@ -146,9 +272,43 @@ const Index = () => {
     showSuccess(`${product.commodity} ditambahkan ke keranjang`);
   };
 
-  const handleAddSupply = (newSupply: any) => {
-    setSupplies(prev => [{ id: Date.now(), ...newSupply }, ...prev]);
-    showSuccess(`Komoditas ${newSupply.commodity} berhasil dinaikkan!`);
+  // --- Secure Data Insertion (Koperasi Tani Portal) ---
+  const handleAddSupply = async (newSupply: any) => {
+    const { data, error } = await supabase
+      .from('commodities')
+      .insert([
+        {
+          commodity_name: newSupply.commodity,
+          stock: newSupply.qty,
+          price: newSupply.price,
+          harvest_date: newSupply.date || null,
+          image_url: newSupply.image || "",
+          cooperative_name: newSupply.cooperative,
+          region: newSupply.region
+        }
+      ])
+      .select();
+
+    if (error) {
+      console.error("Error saving supply:", error);
+      showError("Gagal menyimpan data ke database.");
+      return;
+    }
+
+    if (data) {
+      const savedItem = {
+        id: data[0].id,
+        commodity: data[0].commodity_name,
+        cooperative: data[0].cooperative_name,
+        qty: data[0].stock,
+        price: data[0].price,
+        region: data[0].region,
+        date: data[0].harvest_date,
+        image: data[0].image_url
+      };
+      setSupplies(prev => [savedItem, ...prev]);
+      showSuccess(`Komoditas ${newSupply.commodity} berhasil disimpan secara permanen!`);
+    }
   };
 
   const handleAutoMatch = (supplyId: number, demandId: number) => {
