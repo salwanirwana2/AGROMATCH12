@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Header from '@/components/agromatch/Header';
 import Alerts, { AlertItem } from '@/components/agromatch/Alerts';
 import Dashboard from '@/components/agromatch/Dashboard';
@@ -11,109 +11,68 @@ import ForecastingPortal from '@/components/agromatch/ForecastingPortal';
 import LandingPage from '@/components/agromatch/LandingPage';
 import LoginPage from '@/components/agromatch/LoginPage';
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { showSuccess, showInfo } from '@/utils/toast';
-
-// --- TypeScript Interfaces ---
-export type OrderStatus = "PENDING_MATCHMAKING" | "MATCHED_READY_FOR_SHIPPING" | "SHIPPING" | "DELIVERED";
-
-export interface OrderItem {
-  commodity: string;
-  qty: number; // in KG
-  price: number;
-}
-
-export interface Order {
-  id: string;
-  buyerName: string;
-  buyerPhone: string;
-  address: string;
-  region: string;
-  items: OrderItem[];
-  totalWeight: number;
-  totalPrice: number;
-  status: OrderStatus;
-  adminApprovalTimestamp?: number;
-  matchedSource?: string;
-  logistics?: string;
-  eta?: string;
-}
+import { showSuccess } from '@/utils/toast';
+import { useAgroMatch } from '@/hooks/useAgroMatch';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const [appState, setAppState] = useState<'landing' | 'login' | 'dashboard'>('landing');
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
-  
-  // Global State
   const [cart, setCart] = useState<any[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [supplies, setSupplies] = useState([
-    { id: 1, region: "Pidie", commodity: "Beras", qty: 150, price: 10500, date: "2026-06-10", cooperative: "Koperasi Meuseuraya Pidie", image: "" },
-    { id: 2, region: "Bener Meriah", commodity: "Kentang", qty: 45, price: 12000, date: "2026-06-12", cooperative: "Koperasi Gayo Horti", image: "" },
-    { id: 3, region: "Aceh Tengah", commodity: "Cabai Merah", qty: 20, price: 35000, date: "2026-06-08", cooperative: "Koperasi Tani Dataran Tinggi", image: "" }
-  ]);
 
-  const [demands, setDemands] = useState([
-    { id: 1, region: "Banda Aceh", commodity: "Beras", qty: 180, maxPrice: 12000, date: "2026-06-12", client: "Pasar Induk Lambaro" }
-  ]);
+  // Supabase Data Hook
+  const { supplies, orders, addSupply, createOrder, approveOrder } = useAgroMatch(user);
 
-  // --- AI Forecasting Logic (Real-time Aggregation) ---
+  // Check session on mount
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        const userData = {
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.user_metadata.name,
+          role: session.user.user_metadata.role
+        };
+        setUser(userData);
+        setAppState('dashboard');
+        setInitialTab(userData.role);
+      }
+    });
+  }, []);
+
+  const setInitialTab = (role: string) => {
+    if (role === 'koperasi') setActiveTab('supply');
+    else if (role === 'retail') setActiveTab('demand');
+    else if (role === 'logistik') setActiveTab('logistics');
+    else setActiveTab('dashboard');
+  };
+
+  // AI Forecasting Logic
   const forecastingStats = useMemo(() => {
     const totalBerasSupply = supplies
-      .filter(s => s.commodity === "Beras")
-      .reduce((acc, curr) => acc + curr.qty, 0);
+      .filter(s => s.name === "Beras")
+      .reduce((acc, curr) => acc + curr.stock_ton, 0);
 
-    const totalBerasDemandFromOrders = orders
+    const totalBerasDemand = orders
       .reduce((acc, order) => {
-        const berasItem = order.items.find(i => i.commodity === "Beras");
-        return acc + (berasItem ? berasItem.qty : 0);
+        const berasItem = order.order_items?.find((i: any) => i.commodity_name === "Beras");
+        return acc + (berasItem ? berasItem.quantity_kg : 0);
       }, 0) / 1000;
-
-    const initialBerasDemand = demands
-      .filter(d => d.commodity === "Beras")
-      .reduce((acc, curr) => acc + curr.qty, 0);
 
     return {
       commodity: "Beras",
       region: "Banda Aceh",
-      totalSupply: totalBerasSupply,
-      totalDemand: totalBerasDemandFromOrders + initialBerasDemand
+      totalSupply: totalBerasSupply || 150,
+      totalDemand: totalBerasDemand || 180
     };
-  }, [supplies, orders, demands]);
+  }, [supplies, orders]);
 
-  const [alerts, setAlerts] = useState<AlertItem[]>([
+  const [alerts] = useState<AlertItem[]>([
     { id: 1, type: "danger", text: "Banda Aceh berpotensi DEFISIT Beras sebesar 30 Ton." }
   ]);
 
-  // --- Order Workflow Handlers ---
-  const handleCreateOrder = (orderData: any) => {
-    const newOrder: Order = {
-      id: `AM-${Math.floor(1000 + Math.random() * 9000)}`,
-      ...orderData,
-      status: "PENDING_MATCHMAKING",
-    };
-    setOrders(prev => [newOrder, ...prev]);
-    setCart([]);
-    showSuccess("Pesanan dibuat! Menunggu Matchmaking Admin.");
-  };
-
-  const handleApproveOrder = (orderId: string) => {
-    setOrders(prev => prev.map(order => 
-      order.id === orderId 
-        ? { 
-            ...order, 
-            status: "MATCHED_READY_FOR_SHIPPING", 
-            adminApprovalTimestamp: Date.now(),
-            matchedSource: "Koperasi Meuseuraya Pidie",
-            logistics: "Mitra Logistik AgroMatch",
-            eta: "Menunggu Penjemputan"
-          } 
-        : order
-    ));
-    showSuccess("Pesanan disetujui! Manifest dikirim ke Logistik secara real-time.");
-  };
-
-  // --- Navigation & Auth ---
   const handleSelectRole = (role: string) => {
     setSelectedRole(role);
     setAppState('login');
@@ -122,14 +81,11 @@ const Index = () => {
   const handleLogin = (userData: any) => {
     setUser(userData);
     setAppState('dashboard');
-    if (userData.role === 'koperasi') setActiveTab('supply');
-    else if (userData.role === 'retail') setActiveTab('demand');
-    else if (userData.role === 'logistik') setActiveTab('logistics');
-    else setActiveTab('dashboard');
-    showSuccess(`Selamat datang, ${userData.name}!`);
+    setInitialTab(userData.role);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     setSelectedRole(null);
     setAppState('landing');
@@ -141,18 +97,9 @@ const Index = () => {
     if (existing) {
       setCart(cart.map(item => item.id === product.id ? { ...item, qty: item.qty + 5 } : item));
     } else {
-      setCart([...cart, { ...product, qty: 5 }]);
+      setCart([...cart, { ...product, qty: 5, commodity: product.name }]);
     }
-    showSuccess(`${product.commodity} ditambahkan ke keranjang`);
-  };
-
-  const handleAddSupply = (newSupply: any) => {
-    setSupplies(prev => [{ id: Date.now(), ...newSupply }, ...prev]);
-    showSuccess(`Komoditas ${newSupply.commodity} berhasil dinaikkan!`);
-  };
-
-  const handleAutoMatch = (supplyId: number, demandId: number) => {
-    showSuccess("AI Matchmaking Berhasil!");
+    showSuccess(`${product.name} ditambahkan ke keranjang`);
   };
 
   return (
@@ -166,42 +113,44 @@ const Index = () => {
             forecastingStats={forecastingStats}
             supplies={supplies}
             orders={orders}
-            demands={demands}
+            demands={[]}
           />
         )}
-        {appState === 'login' && selectedRole && <LoginPage role={selectedRole} onLogin={handleLogin} onBack={() => setAppState('landing')} />}
+        {appState === 'login' && selectedRole && (
+          <LoginPage role={selectedRole} onLogin={handleLogin} onBack={() => setAppState('landing')} />
+        )}
         
         {appState === 'dashboard' && user && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <Alerts alerts={alerts} onClear={() => setAlerts([])} />
+            <Alerts alerts={alerts} onClear={() => {}} />
 
             {activeTab === 'dashboard' && (
               <Dashboard 
                 supplies={supplies} 
-                demands={demands} 
-                shipments={orders.filter(o => o.status === "MATCHED_READY_FOR_SHIPPING" || o.status === "SHIPPING")} 
+                demands={[]} 
+                shipments={orders.filter(o => o.status !== "PENDING_MATCHMAKING")} 
                 pendingOrders={orders.filter(o => o.status === "PENDING_MATCHMAKING")}
-                onAutoMatch={handleAutoMatch} 
-                onApproveOrder={handleApproveOrder}
+                onAutoMatch={() => {}} 
+                onApproveOrder={approveOrder}
               />
             )}
 
-            {activeTab === 'supply' && <SupplyPortal supplies={supplies} onAddSupply={handleAddSupply} />}
+            {activeTab === 'supply' && <SupplyPortal supplies={supplies} onAddSupply={addSupply} />}
 
             {activeTab === 'demand' && (
               <DemandPortal 
-                demands={demands} 
+                demands={[]} 
                 supplies={supplies} 
                 cart={cart}
                 setCart={setCart}
                 onAddToCart={handleAddToCart}
-                onCreateOrder={handleCreateOrder}
+                onCreateOrder={createOrder}
                 onAddDemand={() => {}} 
               />
             )}
 
             {activeTab === 'logistics' && (
-              <LogisticsPortal shipments={orders.filter(o => o.status === "MATCHED_READY_FOR_SHIPPING" || o.status === "SHIPPING")} />
+              <LogisticsPortal shipments={orders.filter(o => o.status !== "PENDING_MATCHMAKING")} />
             )}
 
             {activeTab === 'forecasting' && <ForecastingPortal />}

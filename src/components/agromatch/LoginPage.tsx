@@ -5,7 +5,8 @@ import { ShieldCheck, Lock, Mail, ArrowLeft, UserPlus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import RegisterForm from './RegisterForm';
+import { supabase } from '@/integrations/supabase/client';
+import { showError, showSuccess } from '@/utils/toast';
 
 interface LoginPageProps {
   role: string;
@@ -17,6 +18,8 @@ const LoginPage = ({ role, onLogin, onBack }: LoginPageProps) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const getRoleName = () => {
     switch(role) {
@@ -28,117 +31,109 @@ const LoginPage = ({ role, onLogin, onBack }: LoginPageProps) => {
     }
   };
 
-  const getThemeColor = () => {
-    switch(role) {
-      case 'koperasi': return "bg-emerald-900";
-      case 'retail': return "bg-teal-900";
-      case 'logistik': return "bg-blue-900";
-      default: return "bg-slate-900";
-    }
-  };
-
-  const handleDemoLogin = () => {
-    onLogin({
-      role: role,
-      name: `User Demo ${getRoleName()}`,
-      email: "demo@agromatch.aceh.go.id"
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) {
-      onLogin({ role, name: email.split('@')[0], email });
+    setLoading(true);
+
+    try {
+      if (isRegistering) {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { name, role }
+          }
+        });
+        if (error) throw error;
+        showSuccess("Pendaftaran berhasil! Silakan cek email Anda.");
+        setIsRegistering(false);
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        if (error) throw error;
+        
+        const userData = {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.user_metadata.name,
+          role: data.user.user_metadata.role
+        };
+        onLogin(userData);
+      }
+    } catch (error: any) {
+      showError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center p-4 animate-in zoom-in-95 duration-300">
-      <Card className={`w-full ${isRegistering ? 'max-w-2xl' : 'max-w-md'} border-none shadow-2xl rounded-[2.5rem] overflow-hidden transition-all duration-500`}>
-        <div className={`${getThemeColor()} p-8 text-center text-white relative`}>
-          <button 
-            onClick={isRegistering ? () => setIsRegistering(false) : onBack}
-            className="absolute left-6 top-8 text-white/60 hover:text-white transition-colors"
-          >
+      <Card className="w-full max-w-md border-none shadow-2xl rounded-[2.5rem] overflow-hidden">
+        <div className="bg-slate-900 p-8 text-center text-white relative">
+          <button onClick={onBack} className="absolute left-6 top-8 text-white/60 hover:text-white">
             <ArrowLeft size={20} />
           </button>
-          <div className="bg-white/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-            {isRegistering ? <UserPlus size={32} className="text-white" /> : <ShieldCheck size={32} className="text-white" />}
+          <div className="bg-white/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <ShieldCheck size={32} className="text-white" />
           </div>
-          <h2 className="text-2xl font-bold">{isRegistering ? 'Pendaftaran Akun' : 'Login Portal'}</h2>
+          <h2 className="text-2xl font-bold">{isRegistering ? 'Daftar Akun' : 'Login Portal'}</h2>
           <p className="text-white/60 text-sm mt-1">{getRoleName()}</p>
         </div>
         
         <CardContent className="p-8 bg-white">
-          {isRegistering ? (
-            <RegisterForm role={role} onSuccess={() => setIsRegistering(false)} />
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleAuth} className="space-y-5">
+            {isRegistering && (
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Email / Username</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 text-slate-400" size={18} />
-                  <Input 
-                    type="email" 
-                    placeholder="nama@instansi.com" 
-                    className="pl-10 rounded-xl border-slate-200 h-12"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
+                <label className="text-xs font-bold text-slate-500 uppercase">Nama Lengkap</label>
+                <Input 
+                  placeholder="Nama Anda" 
+                  className="rounded-xl h-12"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 text-slate-400" size={18} />
-                  <Input 
-                    type="password" 
-                    placeholder="••••••••" 
-                    className="pl-10 rounded-xl border-slate-200 h-12"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-              </div>
+            )}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase">Email</label>
+              <Input 
+                type="email" 
+                placeholder="nama@instansi.com" 
+                className="rounded-xl h-12"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase">Password</label>
+              <Input 
+                type="password" 
+                placeholder="••••••••" 
+                className="rounded-xl h-12"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
 
-              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-12 rounded-xl shadow-lg">
-                Masuk Sekarang
-              </Button>
+            <Button type="submit" disabled={loading} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-12 rounded-xl">
+              {loading ? "Memproses..." : isRegistering ? "Daftar Sekarang" : "Masuk Sekarang"}
+            </Button>
 
-              <div className="relative py-4">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-slate-100"></span>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-slate-400 font-medium">Atau</span>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={handleDemoLogin}
-                  className="w-full border-slate-100 text-slate-600 hover:bg-slate-50 font-bold h-12 rounded-xl"
-                >
-                  Gunakan Akun Demo (Bypass)
-                </Button>
-
-                {role !== 'admin' && (
-                  <div className="text-center">
-                    <button 
-                      type="button"
-                      onClick={() => setIsRegistering(true)}
-                      className="text-sm font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
-                    >
-                      Belum punya akun? Daftar di sini
-                    </button>
-                  </div>
-                )}
-              </div>
-            </form>
-          )}
+            <div className="text-center">
+              <button 
+                type="button"
+                onClick={() => setIsRegistering(!isRegistering)}
+                className="text-sm font-bold text-emerald-600"
+              >
+                {isRegistering ? "Sudah punya akun? Login" : "Belum punya akun? Daftar"}
+              </button>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>
