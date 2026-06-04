@@ -184,7 +184,7 @@ const Index = () => {
     let publicImageUrl = "";
 
     try {
-      // 1. Upload to Supabase Storage if file exists
+      // 1. Upload ke Supabase Storage jika ada file
       if (file) {
         const fileExt = file.name.split('.').pop();
         const fileName = `public/image_${Date.now()}.${fileExt}`;
@@ -193,9 +193,12 @@ const Index = () => {
           .from('commodity-images')
           .upload(fileName, file);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error("Storage upload error:", uploadError);
+          throw new Error("Gagal mengunggah gambar ke storage.");
+        }
 
-        // 2. Get Public URL
+        // 2. Ambil Public URL
         const { data: urlData } = supabase.storage
           .from('commodity-images')
           .getPublicUrl(fileName);
@@ -203,7 +206,7 @@ const Index = () => {
         publicImageUrl = urlData.publicUrl;
       }
 
-      // 3. Insert into Database
+      // 3. Simpan ke Database
       const { data, error } = await supabase
         .from('commodities')
         .insert([
@@ -219,7 +222,10 @@ const Index = () => {
         ])
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database insert error:", error);
+        throw error;
+      }
 
       if (data) {
         const savedItem = {
@@ -233,11 +239,12 @@ const Index = () => {
           image: data[0].image_url
         };
         setSupplies(prev => [savedItem, ...prev]);
-        showSuccess(`Komoditas ${newSupply.commodity} berhasil disimpan secara permanen!`);
+        showSuccess(`Komoditas ${newSupply.commodity} berhasil dinaikkan ke Pasar!`);
       }
     } catch (error: any) {
-      console.error("Error saving supply:", error);
-      showError(`Gagal menyimpan: ${error.message || "Terjadi kesalahan database"}`);
+      console.error("Error in handleAddSupply:", error);
+      showError(`Gagal mengunggah: ${error.message || "Terjadi kesalahan sistem"}`);
+      throw error; // Lempar kembali agar SupplyPortal tahu proses gagal
     }
   };
 
