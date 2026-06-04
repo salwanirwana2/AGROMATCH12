@@ -1,18 +1,20 @@
 "use client";
 
 import React, { useState, useRef } from 'react';
-import { PlusCircle, CloudUpload, MapPin, Camera, Edit3, Archive, Trash2, RefreshCcw, X } from 'lucide-react';
+import { PlusCircle, CloudUpload, MapPin, Camera, Edit3, Archive, Trash2, RefreshCcw, X, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { showError } from '@/utils/toast';
 
 interface SupplyPortalProps {
   supplies: any[];
-  onAddSupply: (supply: any) => void;
+  onAddSupply: (supply: any, file: File | null) => Promise<void>;
+  userName: string;
 }
 
 const COMMODITIES = [
@@ -27,18 +29,19 @@ const COMMODITIES = [
   "Tomat"
 ];
 
-const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
+const SupplyPortal = ({ supplies, onAddSupply, userName }: SupplyPortalProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   const [formData, setFormData] = useState({
-    cooperative: "Koperasi Meuseuraya Pidie",
+    cooperative: userName,
     region: "Pidie",
-    commodity: "Beras", // Default value set to Beras
+    commodity: "Beras",
     qty: "",
     price: "",
-    date: "",
-    image: ""
+    date: ""
   });
 
   const handleFileClick = () => {
@@ -54,16 +57,15 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      showError("Ukuran file maksimal 2MB.");
+    if (file.size > 5 * 1024 * 1024) {
+      showError("Ukuran file maksimal 5MB.");
       return;
     }
 
+    setSelectedFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
-      const base64String = reader.result as string;
-      setImagePreview(base64String);
-      setFormData(prev => ({ ...prev, image: base64String }));
+      setImagePreview(reader.result as string);
     };
     reader.readAsDataURL(file);
   };
@@ -71,25 +73,31 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
   const removeImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     setImagePreview(null);
-    setFormData(prev => ({ ...prev, image: "" }));
+    setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.qty || !formData.price || !formData.cooperative) {
+    if (!formData.qty || !formData.price) {
       showError("Harap lengkapi data stok dan harga.");
       return;
     }
     
-    onAddSupply({
-      ...formData,
-      qty: parseFloat(formData.qty),
-      price: parseFloat(formData.price)
-    });
+    setIsUploading(true);
+    try {
+      await onAddSupply({
+        ...formData,
+        qty: parseFloat(formData.qty),
+        price: parseFloat(formData.price)
+      }, selectedFile);
 
-    setFormData({ ...formData, qty: "", price: "", date: "", image: "" });
-    setImagePreview(null);
+      setFormData({ ...formData, qty: "", price: "", date: "" });
+      setImagePreview(null);
+      setSelectedFile(null);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const getEmoji = (commodity: string) => {
@@ -164,7 +172,7 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
                         <Camera className="text-slate-400 group-hover:text-emerald-500" size={20} />
                       </div>
                       <span className="text-xs font-bold text-emerald-600 block">+ Tambah Foto</span>
-                      <span className="text-[10px] text-slate-400 block mt-1">Maksimal 2MB (JPG, PNG)</span>
+                      <span className="text-[10px] text-slate-400 block mt-1">Maksimal 5MB (JPG, PNG)</span>
                     </>
                   )}
                 </div>
@@ -219,8 +227,20 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-6 rounded-xl shadow-md transition-all">
-                <CloudUpload className="mr-2 h-5 w-5" /> Naikkan / Upload Komoditas
+              <Button 
+                type="submit" 
+                disabled={isUploading}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-6 rounded-xl shadow-md transition-all"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Memproses...
+                  </>
+                ) : (
+                  <>
+                    <CloudUpload className="mr-2 h-5 w-5" /> Naikkan / Upload Komoditas
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>
@@ -255,7 +275,12 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
                   getBgColor(sup.commodity)
                 )}>
                   {sup.image ? (
-                    <img src={sup.image} alt={sup.commodity} className="w-full h-full object-cover" />
+                    <img 
+                      src={sup.image} 
+                      alt={sup.commodity} 
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
                   ) : (
                     getEmoji(sup.commodity)
                   )}
@@ -295,28 +320,20 @@ const SupplyPortal = ({ supplies, onAddSupply }: SupplyPortalProps) => {
               </div>
 
               <div className="p-5 pt-0 grid grid-cols-2 gap-3 relative z-20">
-                {sup.qty === 0 ? (
-                  <>
-                    <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl h-10">
-                      <RefreshCcw size={14} className="mr-1.5" /> Isi Ulang
-                    </Button>
-                    <Button variant="outline" className="border-slate-200 text-slate-500 font-bold text-xs rounded-xl h-10 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100">
-                      <Trash2 size={14} className="mr-1.5" /> Hapus
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button variant="outline" className="border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl h-10">
-                      <Edit3 size={14} className="mr-1.5" /> Ubah Stok
-                    </Button>
-                    <Button variant="secondary" className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl h-10">
-                      <Archive size={14} className="mr-1.5" /> Arsipkan
-                    </Button>
-                  </>
-                )}
+                <Button variant="outline" className="border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl h-10">
+                  <Edit3 size={14} className="mr-1.5" /> Ubah Stok
+                </Button>
+                <Button variant="secondary" className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl h-10">
+                  <Archive size={14} className="mr-1.5" /> Arsipkan
+                </Button>
               </div>
             </div>
           ))}
+          {supplies.length === 0 && (
+            <div className="col-span-2 py-20 text-center bg-slate-50 rounded-[2rem] border border-dashed border-slate-200">
+              <p className="text-slate-400 font-medium">Belum ada komoditas yang Anda unggah.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

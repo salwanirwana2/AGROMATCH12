@@ -55,7 +55,7 @@ const Index = () => {
     { id: 1, region: "Banda Aceh", commodity: "Beras", qty: 180, maxPrice: 12000, date: "2026-06-12", client: "Pasar Induk Lambaro" }
   ]);
 
-  // --- Isolated Data Fetching (Retail / Pasar Portal) ---
+  // --- Isolated Data Fetching ---
   const fetchCommodities = async () => {
     setIsLoading(true);
     try {
@@ -81,7 +81,6 @@ const Index = () => {
       }
     } catch (error: any) {
       console.error("Error fetching commodities:", error);
-      // Jangan tampilkan error toast di sini agar tidak mengganggu landing page
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +90,7 @@ const Index = () => {
     fetchCommodities();
   }, []);
 
-  // --- AI Forecasting Logic (Real-time Aggregation) ---
+  // --- AI Forecasting Logic ---
   const forecastingStats = useMemo(() => {
     const totalBerasSupply = supplies
       .filter(s => s.commodity === "Beras")
@@ -180,9 +179,31 @@ const Index = () => {
     showSuccess(`${product.commodity} ditambahkan ke keranjang`);
   };
 
-  // --- Secure Data Insertion (Koperasi Tani Portal) ---
-  const handleAddSupply = async (newSupply: any) => {
+  // --- Secure Data Insertion with Image Upload ---
+  const handleAddSupply = async (newSupply: any, file: File | null) => {
+    let publicImageUrl = "";
+
     try {
+      // 1. Upload to Supabase Storage if file exists
+      if (file) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `public/image_${Date.now()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('commodity-images')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        // 2. Get Public URL
+        const { data: urlData } = supabase.storage
+          .from('commodity-images')
+          .getPublicUrl(fileName);
+        
+        publicImageUrl = urlData.publicUrl;
+      }
+
+      // 3. Insert into Database
       const { data, error } = await supabase
         .from('commodities')
         .insert([
@@ -191,7 +212,7 @@ const Index = () => {
             stock: newSupply.qty,
             price: newSupply.price,
             harvest_date: newSupply.date || null,
-            image_url: newSupply.image || "",
+            image_url: publicImageUrl,
             cooperative_name: newSupply.cooperative,
             region: newSupply.region
           }
@@ -224,6 +245,12 @@ const Index = () => {
     showSuccess("AI Matchmaking Berhasil!");
   };
 
+  // Filter supplies for the logged-in cooperative
+  const mySupplies = useMemo(() => {
+    if (!user || user.role !== 'koperasi') return [];
+    return supplies.filter(s => s.cooperative === user.name);
+  }, [supplies, user]);
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col w-full">
       <Header activeTab={activeTab} setActiveTab={setActiveTab} user={user} onLogout={handleLogout} />
@@ -255,7 +282,13 @@ const Index = () => {
               />
             )}
 
-            {activeTab === 'supply' && <SupplyPortal supplies={supplies} onAddSupply={handleAddSupply} />}
+            {activeTab === 'supply' && (
+              <SupplyPortal 
+                supplies={mySupplies} 
+                onAddSupply={handleAddSupply} 
+                userName={user.name}
+              />
+            )}
 
             {activeTab === 'demand' && (
               <DemandPortal 
