@@ -186,24 +186,37 @@ const Index = () => {
     try {
       // 1. Upload ke Supabase Storage jika ada file
       if (file) {
+        // Pastikan file adalah objek File yang valid
+        if (!(file instanceof File)) {
+          console.error("Invalid file object detected:", file);
+          throw new Error("Objek file tidak valid.");
+        }
+
         const fileExt = file.name.split('.').pop();
-        const fileName = `public/image_${Date.now()}.${fileExt}`;
+        const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+        const filePath = `public/${fileName}`;
         
+        console.log("Attempting to upload to bucket 'commodity-images' at path:", filePath);
+
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('commodity-images')
-          .upload(fileName, file);
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
         if (uploadError) {
-          console.error("Storage upload error:", uploadError);
-          throw new Error("Gagal mengunggah gambar ke storage.");
+          console.error("Supabase Storage Error Detailed:", uploadError);
+          throw new Error(`Gagal mengunggah gambar: ${uploadError.message}`);
         }
 
         // 2. Ambil Public URL
         const { data: urlData } = supabase.storage
           .from('commodity-images')
-          .getPublicUrl(fileName);
+          .getPublicUrl(filePath);
         
         publicImageUrl = urlData.publicUrl;
+        console.log("Image uploaded successfully. Public URL:", publicImageUrl);
       }
 
       // 3. Simpan ke Database
@@ -223,7 +236,7 @@ const Index = () => {
         .select();
 
       if (error) {
-        console.error("Database insert error:", error);
+        console.error("Database Insert Error Detailed:", error);
         throw error;
       }
 
@@ -242,9 +255,9 @@ const Index = () => {
         showSuccess(`Komoditas ${newSupply.commodity} berhasil dinaikkan ke Pasar!`);
       }
     } catch (error: any) {
-      console.error("Error in handleAddSupply:", error);
+      console.error("Full Submission Error Trace:", error);
       showError(`Gagal mengunggah: ${error.message || "Terjadi kesalahan sistem"}`);
-      throw error; // Lempar kembali agar SupplyPortal tahu proses gagal
+      throw error; 
     }
   };
 
