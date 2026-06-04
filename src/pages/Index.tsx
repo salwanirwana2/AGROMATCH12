@@ -56,18 +56,17 @@ const Index = () => {
   ]);
 
   // --- Isolated Data Fetching (Retail / Pasar Portal) ---
-  useEffect(() => {
-    const fetchCommodities = async () => {
-      setIsLoading(true);
+  const fetchCommodities = async () => {
+    setIsLoading(true);
+    try {
       const { data, error } = await supabase
         .from('commodities')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("Error fetching commodities:", error);
-      } else if (data) {
-        // Map database rows cleanly into the existing product card components
+      if (error) throw error;
+
+      if (data) {
         const mappedSupplies = data.map(item => ({
           id: item.id,
           commodity: item.commodity_name,
@@ -80,9 +79,15 @@ const Index = () => {
         }));
         setSupplies(mappedSupplies);
       }
+    } catch (error: any) {
+      console.error("Error fetching commodities:", error);
+      // Jangan tampilkan error toast di sini agar tidak mengganggu landing page
+    } finally {
       setIsLoading(false);
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchCommodities();
   }, []);
 
@@ -177,40 +182,41 @@ const Index = () => {
 
   // --- Secure Data Insertion (Koperasi Tani Portal) ---
   const handleAddSupply = async (newSupply: any) => {
-    const { data, error } = await supabase
-      .from('commodities')
-      .insert([
-        {
-          commodity_name: newSupply.commodity,
-          stock: newSupply.qty,
-          price: newSupply.price,
-          harvest_date: newSupply.date || null,
-          image_url: newSupply.image || "",
-          cooperative_name: newSupply.cooperative,
-          region: newSupply.region
-        }
-      ])
-      .select();
+    try {
+      const { data, error } = await supabase
+        .from('commodities')
+        .insert([
+          {
+            commodity_name: newSupply.commodity,
+            stock: newSupply.qty,
+            price: newSupply.price,
+            harvest_date: newSupply.date || null,
+            image_url: newSupply.image || "",
+            cooperative_name: newSupply.cooperative,
+            region: newSupply.region
+          }
+        ])
+        .select();
 
-    if (error) {
+      if (error) throw error;
+
+      if (data) {
+        const savedItem = {
+          id: data[0].id,
+          commodity: data[0].commodity_name,
+          cooperative: data[0].cooperative_name,
+          qty: data[0].stock,
+          price: data[0].price,
+          region: data[0].region,
+          date: data[0].harvest_date,
+          image: data[0].image_url
+        };
+        setSupplies(prev => [savedItem, ...prev]);
+        showSuccess(`Komoditas ${newSupply.commodity} berhasil disimpan secara permanen!`);
+      }
+    } catch (error: any) {
       console.error("Error saving supply:", error);
-      showError("Gagal menyimpan data ke database.");
-      return;
-    }
-
-    if (data) {
-      const savedItem = {
-        id: data[0].id,
-        commodity: data[0].commodity_name,
-        cooperative: data[0].cooperative_name,
-        qty: data[0].stock,
-        price: data[0].price,
-        region: data[0].region,
-        date: data[0].harvest_date,
-        image: data[0].image_url
-      };
-      setSupplies(prev => [savedItem, ...prev]);
-      showSuccess(`Komoditas ${newSupply.commodity} berhasil disimpan secara permanen!`);
+      showError(`Gagal menyimpan: ${error.message || "Terjadi kesalahan database"}`);
     }
   };
 
