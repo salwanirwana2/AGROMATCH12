@@ -13,7 +13,11 @@ import {
   Store,
   AlertCircle,
   Trash2,
-  Ban
+  Ban,
+  CreditCard,
+  Wallet,
+  ChevronRight,
+  ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,13 +38,23 @@ interface DemandPortalProps {
 
 const DemandPortal = ({ demands, supplies, cart, setCart, onAddToCart, onCreateOrder, onAddDemand }: DemandPortalProps) => {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState<'cart' | 'payment'>('cart');
   const [selectedCourier, setSelectedCourier] = useState<string>('internal');
+  const [paymentMethod, setPaymentMethod] = useState<'Transfer Bank' | 'COD'>('Transfer Bank');
+  const [selectedBank, setSelectedBank] = useState<string>('BSI');
   const [buyerInfo, setBuyerInfo] = useState({ name: '', phone: '', address: '', region: 'Banda Aceh' });
   
   const couriers = [
     { id: 'internal', name: 'Kurir Internal Koperasi', price: 50000, eta: '3-5 Jam', desc: 'Rekomendasi Terdekat' },
     { id: 'jt', name: 'J&T Cargo', price: 85000, eta: '1 Hari', desc: 'Layanan Cepat' },
     { id: 'jne', name: 'JNE Logistics', price: 75000, eta: '1-2 Hari', desc: 'Layanan Reguler' }
+  ];
+
+  const banks = [
+    { id: 'BSI', name: 'Bank Syariah Indonesia', logo: '🏦', acc: '7123-456-789' },
+    { id: 'Mandiri', name: 'Bank Mandiri', logo: '🏦', acc: '123-00-456789-0' },
+    { id: 'BRI', name: 'Bank BRI', logo: '🏦', acc: '0123-01-456789-50-1' },
+    { id: 'BCA', name: 'Bank BCA', logo: '🏦', acc: '1234567890' }
   ];
 
   const updateItemQty = (id: string | number, newQty: number) => {
@@ -64,22 +78,26 @@ const DemandPortal = ({ demands, supplies, cart, setCart, onAddToCart, onCreateO
     return calculateSubtotal() + courierPrice;
   };
 
-  const isOrderValid = () => {
-    const hasItems = cart.length > 0;
-    const allItemsMin5kg = cart.every(item => item.qty >= 5);
-    const hasInfo = buyerInfo.name && buyerInfo.phone && buyerInfo.address;
-    return hasItems && allItemsMin5kg && hasInfo;
+  const isInfoValid = () => {
+    return cart.length > 0 && 
+           cart.every(item => item.qty >= 5) && 
+           buyerInfo.name && 
+           buyerInfo.phone && 
+           buyerInfo.address;
   };
 
-  const handleConfirmOrder = () => {
-    if (!isOrderValid()) {
+  const handleNextStep = () => {
+    if (!isInfoValid()) {
       showError("Harap lengkapi data dan pastikan semua item minimal 5 KG.");
       return;
     }
+    setCheckoutStep('payment');
+  };
 
+  const handleConfirmOrder = () => {
     const orderData = {
       items: cart.map(item => ({ 
-        id: item.id, // Pastikan ID diteruskan untuk pengurangan stok
+        id: item.id,
         commodity: item.commodity, 
         qty: item.qty, 
         price: item.price 
@@ -90,11 +108,14 @@ const DemandPortal = ({ demands, supplies, cart, setCart, onAddToCart, onCreateO
       region: buyerInfo.region,
       totalWeight: calculateTotalWeight(),
       totalPrice: calculateTotal(),
-      courier: couriers.find(c => c.id === selectedCourier)?.name
+      courier: couriers.find(c => c.id === selectedCourier)?.name,
+      paymentMethod: paymentMethod,
+      bankName: paymentMethod === 'Transfer Bank' ? selectedBank : null
     };
 
     onCreateOrder(orderData);
     setIsCheckoutOpen(false);
+    setCheckoutStep('cart');
     setBuyerInfo({ name: '', phone: '', address: '', region: 'Banda Aceh' });
   };
 
@@ -152,7 +173,7 @@ const DemandPortal = ({ demands, supplies, cart, setCart, onAddToCart, onCreateO
             />
           </div>
           <div 
-            onClick={() => setIsCheckoutOpen(true)}
+            onClick={() => { setIsCheckoutOpen(true); setCheckoutStep('cart'); }}
             className="relative cursor-pointer p-2 bg-teal-600 rounded-xl hover:bg-teal-700 transition shadow-lg shadow-teal-100"
           >
             <ShoppingBag className="text-white" size={24} />
@@ -254,7 +275,9 @@ const DemandPortal = ({ demands, supplies, cart, setCart, onAddToCart, onCreateO
                 <div className="bg-white/20 p-2 rounded-xl">
                   <ShoppingBag size={20} />
                 </div>
-                <h3 className="font-bold text-lg">Checkout Keranjang Belanja</h3>
+                <h3 className="font-bold text-lg">
+                  {checkoutStep === 'cart' ? 'Checkout Keranjang Belanja' : 'Pilih Metode Pembayaran'}
+                </h3>
               </div>
               <button onClick={() => setIsCheckoutOpen(false)} className="hover:bg-white/20 p-2 rounded-full transition">
                 <X size={20} />
@@ -262,137 +285,229 @@ const DemandPortal = ({ demands, supplies, cart, setCart, onAddToCart, onCreateO
             </div>
 
             <div className="p-6 overflow-y-auto space-y-8">
-              {/* Cart Items List */}
-              <div className="space-y-4">
-                <h5 className="text-sm font-bold text-slate-900 flex items-center">
-                  <ShoppingBag size={16} className="mr-2 text-teal-600" /> Daftar Belanja
-                </h5>
-                {cart.length === 0 ? (
-                  <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                    <p className="text-slate-400 text-sm">Keranjang Anda kosong.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {cart.map((item) => (
-                      <div key={item.id} className="flex items-center space-x-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <div className={cn("w-14 h-14 rounded-xl flex items-center justify-center text-2xl overflow-hidden", getBgColor(item.commodity))}>
-                          {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : getEmoji(item.commodity)}
-                        </div>
-                        <div className="flex-grow">
-                          <h4 className="font-bold text-slate-900 text-sm">{item.commodity} Premium</h4>
-                          <p className="text-[10px] text-slate-500">{item.cooperative}</p>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <div className="flex items-center space-x-2">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase">JUMLAH (KG)</label>
-                            <div className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
-                              <button onClick={() => updateItemQty(item.id, item.qty - 1)} className="px-2 py-1 hover:bg-slate-100">-</button>
-                              <Input 
-                                type="number" 
-                                value={item.qty} 
-                                onChange={(e) => updateItemQty(item.id, Number(e.target.value))}
-                                className="w-12 h-8 text-center border-none focus:ring-0 text-xs font-bold"
-                              />
-                              <button onClick={() => updateItemQty(item.id, item.qty + 1)} className="px-2 py-1 hover:bg-slate-100">+</button>
+              {checkoutStep === 'cart' ? (
+                <>
+                  {/* Cart Items List */}
+                  <div className="space-y-4">
+                    <h5 className="text-sm font-bold text-slate-900 flex items-center">
+                      <ShoppingBag size={16} className="mr-2 text-teal-600" /> Daftar Belanja
+                    </h5>
+                    {cart.length === 0 ? (
+                      <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        <p className="text-slate-400 text-sm">Keranjang Anda kosong.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {cart.map((item) => (
+                          <div key={item.id} className="flex items-center space-x-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <div className={cn("w-14 h-14 rounded-xl flex items-center justify-center text-2xl overflow-hidden", getBgColor(item.commodity))}>
+                              {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : getEmoji(item.commodity)}
                             </div>
+                            <div className="flex-grow">
+                              <h4 className="font-bold text-slate-900 text-sm">{item.commodity} Premium</h4>
+                              <p className="text-[10px] text-slate-500">{item.cooperative}</p>
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                              <div className="flex items-center space-x-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase">JUMLAH (KG)</label>
+                                <div className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
+                                  <button onClick={() => updateItemQty(item.id, item.qty - 1)} className="px-2 py-1 hover:bg-slate-100">-</button>
+                                  <Input 
+                                    type="number" 
+                                    value={item.qty} 
+                                    onChange={(e) => updateItemQty(item.id, Number(e.target.value))}
+                                    className="w-12 h-8 text-center border-none focus:ring-0 text-xs font-bold"
+                                  />
+                                  <button onClick={() => updateItemQty(item.id, item.qty + 1)} className="px-2 py-1 hover:bg-slate-100">+</button>
+                                </div>
+                              </div>
+                              {item.qty < 5 && (
+                                <span className="text-[9px] text-rose-500 font-bold flex items-center gap-1">
+                                  <AlertCircle size={10} /> Minimal pembelian adalah 5 KG
+                                </span>
+                              )}
+                            </div>
+                            <button onClick={() => removeItem(item.id)} className="text-slate-300 hover:text-rose-500 transition">
+                              <Trash2 size={18} />
+                            </button>
                           </div>
-                          {item.qty < 5 && (
-                            <span className="text-[9px] text-rose-500 font-bold flex items-center gap-1">
-                              <AlertCircle size={10} /> Minimal pembelian adalah 5 KG
-                            </span>
-                          )}
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h5 className="text-sm font-bold text-slate-900 flex items-center">
+                        <User size={16} className="mr-2 text-teal-600" /> Informasi Penerima
+                      </h5>
+                      <div className="space-y-3">
+                        <Input 
+                          placeholder="Nama Lengkap Kontak" 
+                          className="rounded-xl border-slate-200" 
+                          value={buyerInfo.name}
+                          onChange={e => setBuyerInfo({...buyerInfo, name: e.target.value})}
+                        />
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                          <Input 
+                            placeholder="Nomor HP Aktif" 
+                            className="pl-10 rounded-xl border-slate-200" 
+                            value={buyerInfo.phone}
+                            onChange={e => setBuyerInfo({...buyerInfo, phone: e.target.value})}
+                          />
                         </div>
-                        <button onClick={() => removeItem(item.id)} className="text-slate-300 hover:text-rose-500 transition">
-                          <Trash2 size={18} />
-                        </button>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                    </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h5 className="text-sm font-bold text-slate-900 flex items-center">
-                    <User size={16} className="mr-2 text-teal-600" /> Informasi Penerima
-                  </h5>
-                  <div className="space-y-3">
-                    <Input 
-                      placeholder="Nama Lengkap Kontak" 
-                      className="rounded-xl border-slate-200" 
-                      value={buyerInfo.name}
-                      onChange={e => setBuyerInfo({...buyerInfo, name: e.target.value})}
-                    />
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                      <Input 
-                        placeholder="Nomor HP Aktif" 
-                        className="pl-10 rounded-xl border-slate-200" 
-                        value={buyerInfo.phone}
-                        onChange={e => setBuyerInfo({...buyerInfo, phone: e.target.value})}
-                      />
+                    <div className="space-y-4">
+                      <h5 className="text-sm font-bold text-slate-900 flex items-center">
+                        <MapPin size={16} className="mr-2 text-teal-600" /> Alamat Pengiriman
+                      </h5>
+                      <div className="space-y-3">
+                        <textarea 
+                          placeholder="Alamat spesifik retail/pasar..." 
+                          className="w-full h-24 p-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                          value={buyerInfo.address}
+                          onChange={e => setBuyerInfo({...buyerInfo, address: e.target.value})}
+                        ></textarea>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="space-y-4">
-                  <h5 className="text-sm font-bold text-slate-900 flex items-center">
-                    <MapPin size={16} className="mr-2 text-teal-600" /> Alamat Pengiriman
-                  </h5>
-                  <div className="space-y-3">
-                    <textarea 
-                      placeholder="Alamat spesifik retail/pasar..." 
-                      className="w-full h-24 p-3 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
-                      value={buyerInfo.address}
-                      onChange={e => setBuyerInfo({...buyerInfo, address: e.target.value})}
-                    ></textarea>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h5 className="text-sm font-bold text-slate-900 flex items-center">
-                  <Truck size={16} className="mr-2 text-teal-600" /> Opsi Pengiriman Terdekat
-                </h5>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {couriers.map((courier) => (
-                    <div 
-                      key={courier.id}
-                      onClick={() => setSelectedCourier(courier.id)}
-                      className={cn(
-                        "p-4 rounded-2xl border-2 cursor-pointer transition-all",
-                        selectedCourier === courier.id 
-                          ? "border-teal-600 bg-teal-50/50" 
-                          : "border-slate-100 bg-white hover:border-slate-200"
-                      )}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-[10px] font-bold text-teal-600 uppercase">{courier.eta}</span>
-                        {selectedCourier === courier.id && <CheckCircle2 size={14} className="text-teal-600" />}
-                      </div>
-                      <h6 className="text-xs font-bold text-slate-900">{courier.name}</h6>
-                      <p className="text-xs font-bold text-slate-900 mt-2">Rp {courier.price.toLocaleString('id-ID')}</p>
+                  <div className="space-y-4">
+                    <h5 className="text-sm font-bold text-slate-900 flex items-center">
+                      <Truck size={16} className="mr-2 text-teal-600" /> Opsi Pengiriman Terdekat
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {couriers.map((courier) => (
+                        <div 
+                          key={courier.id}
+                          onClick={() => setSelectedCourier(courier.id)}
+                          className={cn(
+                            "p-4 rounded-2xl border-2 cursor-pointer transition-all",
+                            selectedCourier === courier.id 
+                              ? "border-teal-600 bg-teal-50/50" 
+                              : "border-slate-100 bg-white hover:border-slate-200"
+                          )}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-[10px] font-bold text-teal-600 uppercase">{courier.eta}</span>
+                            {selectedCourier === courier.id && <CheckCircle2 size={14} className="text-teal-600" />}
+                          </div>
+                          <h6 className="text-xs font-bold text-slate-900">{courier.name}</h6>
+                          <p className="text-xs font-bold text-slate-900 mt-2">Rp {courier.price.toLocaleString('id-ID')}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
+                  <button 
+                    onClick={() => setCheckoutStep('cart')}
+                    className="flex items-center gap-2 text-sm font-bold text-teal-600 hover:text-teal-700"
+                  >
+                    <ArrowLeft size={16} /> Kembali ke Keranjang
+                  </button>
+
+                  <div className="space-y-4">
+                    <h5 className="text-sm font-bold text-slate-900">Pilih Metode Pembayaran</h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div 
+                        onClick={() => setPaymentMethod('Transfer Bank')}
+                        className={cn(
+                          "p-6 rounded-3xl border-2 cursor-pointer transition-all flex items-center gap-4",
+                          paymentMethod === 'Transfer Bank' ? "border-teal-600 bg-teal-50" : "border-slate-100 hover:border-slate-200"
+                        )}
+                      >
+                        <div className={cn("p-3 rounded-2xl", paymentMethod === 'Transfer Bank' ? "bg-teal-600 text-white" : "bg-slate-100 text-slate-400")}>
+                          <CreditCard size={24} />
+                        </div>
+                        <div>
+                          <h6 className="font-bold text-slate-900">Transfer Bank</h6>
+                          <p className="text-[10px] text-slate-500">Verifikasi Otomatis</p>
+                        </div>
+                      </div>
+                      <div 
+                        onClick={() => setPaymentMethod('COD')}
+                        className={cn(
+                          "p-6 rounded-3xl border-2 cursor-pointer transition-all flex items-center gap-4",
+                          paymentMethod === 'COD' ? "border-teal-600 bg-teal-50" : "border-slate-100 hover:border-slate-200"
+                        )}
+                      >
+                        <div className={cn("p-3 rounded-2xl", paymentMethod === 'COD' ? "bg-teal-600 text-white" : "bg-slate-100 text-slate-400")}>
+                          <Wallet size={24} />
+                        </div>
+                        <div>
+                          <h6 className="font-bold text-slate-900">Bayar di Tempat (COD)</h6>
+                          <p className="text-[10px] text-slate-500">Bayar saat barang tiba</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {paymentMethod === 'Transfer Bank' && (
+                    <div className="space-y-4 animate-in fade-in duration-300">
+                      <h5 className="text-sm font-bold text-slate-900">Pilih Bank Transfer</h5>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {banks.map((bank) => (
+                          <div 
+                            key={bank.id}
+                            onClick={() => setSelectedBank(bank.id)}
+                            className={cn(
+                              "p-4 rounded-2xl border-2 cursor-pointer transition-all flex justify-between items-center",
+                              selectedBank === bank.id ? "border-teal-600 bg-white shadow-md" : "border-slate-100 bg-slate-50"
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-xl">{bank.logo}</span>
+                              <div>
+                                <h6 className="text-xs font-bold text-slate-900">{bank.name}</h6>
+                                <p className="text-[10px] text-slate-500">{bank.acc}</p>
+                              </div>
+                            </div>
+                            {selectedBank === bank.id && <CheckCircle2 size={16} className="text-teal-600" />}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex items-start gap-3">
+                        <AlertCircle size={18} className="text-amber-600 mt-0.5" />
+                        <p className="text-[11px] text-amber-800 leading-relaxed">
+                          Silakan transfer sesuai nominal total ke rekening di atas. Pesanan akan diproses setelah pembayaran terverifikasi oleh sistem.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
               <div className="flex flex-col">
-                <span className="text-[10px] text-slate-400 font-bold uppercase">Total Berat: {calculateTotalWeight()} KG</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase">Total Pembayaran</span>
                 <span className="text-2xl font-black text-teal-600">Rp {calculateTotal().toLocaleString('id-ID')}</span>
               </div>
-              <Button 
-                onClick={handleConfirmOrder}
-                disabled={!isOrderValid()}
-                className={cn(
-                  "w-full sm:w-auto font-bold px-10 py-6 rounded-2xl shadow-lg transition-all",
-                  isOrderValid() ? "bg-teal-600 hover:bg-teal-700 text-white" : "bg-slate-200 text-slate-400 cursor-not-allowed"
-                )}
-              >
-                Konfirmasi & Buat Pesanan
-              </Button>
+              
+              {checkoutStep === 'cart' ? (
+                <Button 
+                  onClick={handleNextStep}
+                  disabled={!isInfoValid()}
+                  className={cn(
+                    "w-full sm:w-auto font-bold px-10 py-6 rounded-2xl shadow-lg transition-all flex items-center gap-2",
+                    isInfoValid() ? "bg-teal-600 hover:bg-teal-700 text-white" : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  )}
+                >
+                  Lanjut ke Pembayaran <ChevronRight size={18} />
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleConfirmOrder}
+                  className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white font-bold px-10 py-6 rounded-2xl shadow-lg transition-all flex items-center gap-2"
+                >
+                  <CheckCircle2 size={18} /> {paymentMethod === 'COD' ? 'Konfirmasi Pesanan' : 'Bayar Sekarang'}
+                </Button>
+              )}
             </div>
           </div>
         </div>
