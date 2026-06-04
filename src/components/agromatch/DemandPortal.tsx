@@ -12,7 +12,8 @@ import {
   Search,
   Store,
   AlertCircle,
-  Trash2
+  Trash2,
+  Ban
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,11 +43,11 @@ const DemandPortal = ({ demands, supplies, cart, setCart, onAddToCart, onCreateO
     { id: 'jne', name: 'JNE Logistics', price: 75000, eta: '1-2 Hari', desc: 'Layanan Reguler' }
   ];
 
-  const updateItemQty = (id: number, newQty: number) => {
+  const updateItemQty = (id: string | number, newQty: number) => {
     setCart(cart.map(item => item.id === id ? { ...item, qty: Math.max(0, newQty) } : item));
   };
 
-  const removeItem = (id: number) => {
+  const removeItem = (id: string | number) => {
     setCart(cart.filter(item => item.id !== id));
   };
 
@@ -77,7 +78,12 @@ const DemandPortal = ({ demands, supplies, cart, setCart, onAddToCart, onCreateO
     }
 
     const orderData = {
-      items: cart.map(item => ({ commodity: item.commodity, qty: item.qty, price: item.price })),
+      items: cart.map(item => ({ 
+        id: item.id, // Pastikan ID diteruskan untuk pengurangan stok
+        commodity: item.commodity, 
+        qty: item.qty, 
+        price: item.price 
+      })),
       buyerName: buyerInfo.name,
       buyerPhone: buyerInfo.phone,
       address: buyerInfo.address,
@@ -166,45 +172,77 @@ const DemandPortal = ({ demands, supplies, cart, setCart, onAddToCart, onCreateO
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {supplies.map((product) => (
-            <Card key={product.id} className="group border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 rounded-[2rem] overflow-hidden flex flex-col">
-              <div className={cn("h-48 flex items-center justify-center text-6xl transition-transform duration-500 group-hover:scale-110 overflow-hidden", getBgColor(product.commodity))}>
-                {product.image ? (
-                  <img src={product.image} alt={product.commodity} className="w-full h-full object-cover" />
-                ) : (
-                  getEmoji(product.commodity)
-                )}
-              </div>
-              <CardContent className="p-5 flex-grow flex flex-col justify-between">
-                <div className="space-y-2">
-                  <div>
-                    <h4 className="font-bold text-slate-900 leading-tight">{product.commodity} Premium</h4>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">{product.cooperative}</p>
-                  </div>
-                  
-                  <div className="flex justify-between items-end">
+          {supplies.map((product) => {
+            const isSoldOut = product.qty <= 0;
+            
+            return (
+              <Card key={product.id} className={cn(
+                "group border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 rounded-[2rem] overflow-hidden flex flex-col",
+                isSoldOut && "opacity-75 grayscale-[0.5]"
+              )}>
+                <div className={cn(
+                  "h-48 flex items-center justify-center text-6xl transition-transform duration-500 group-hover:scale-110 overflow-hidden relative", 
+                  getBgColor(product.commodity)
+                )}>
+                  {isSoldOut && (
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-10">
+                      <Badge className="bg-rose-600 text-white border-none px-4 py-2 rounded-xl font-black text-sm shadow-xl animate-pulse">
+                        SOLD OUT
+                      </Badge>
+                    </div>
+                  )}
+                  {product.image ? (
+                    <img src={product.image} alt={product.commodity} className="w-full h-full object-cover" />
+                  ) : (
+                    getEmoji(product.commodity)
+                  )}
+                </div>
+                <CardContent className="p-5 flex-grow flex flex-col justify-between">
+                  <div className="space-y-2">
                     <div>
-                      <span className="text-[10px] text-slate-400 block font-bold uppercase">Harga / Kg</span>
-                      <span className="text-lg font-black text-teal-600">Rp {product.price.toLocaleString('id-ID')}</span>
+                      <h4 className="font-bold text-slate-900 leading-tight">{product.commodity} Premium</h4>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">{product.cooperative}</p>
                     </div>
-                    <div className="text-right">
-                      <span className="text-[10px] text-slate-400 block font-bold uppercase">Stok</span>
-                      <span className="text-sm font-bold text-slate-700">{product.qty} Ton</span>
+                    
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-bold uppercase">Harga / Kg</span>
+                        <span className="text-lg font-black text-teal-600">Rp {product.price.toLocaleString('id-ID')}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-slate-400 block font-bold uppercase">Stok</span>
+                        <span className={cn(
+                          "text-sm font-bold",
+                          isSoldOut ? "text-rose-500" : "text-slate-700"
+                        )}>
+                          {isSoldOut ? "Habis" : `${product.qty} Ton`}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="mt-5">
-                  <Button 
-                    onClick={() => onAddToCart(product)}
-                    className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-md flex items-center justify-center gap-2"
-                  >
-                    <ShoppingBag size={18} /> Tambah ke Keranjang
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="mt-5">
+                    <Button 
+                      onClick={() => onAddToCart(product)}
+                      disabled={isSoldOut}
+                      className={cn(
+                        "w-full font-bold rounded-xl shadow-md flex items-center justify-center gap-2 h-12",
+                        isSoldOut 
+                          ? "bg-slate-200 text-slate-400 cursor-not-allowed" 
+                          : "bg-teal-600 hover:bg-teal-700 text-white"
+                      )}
+                    >
+                      {isSoldOut ? (
+                        <><Ban size={18} /> Stok Habis</>
+                      ) : (
+                        <><ShoppingBag size={18} /> Tambah ke Keranjang</>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
 

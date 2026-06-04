@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type OrderStatus = "PENDING_MATCHMAKING" | "MATCHED_READY_FOR_SHIPPING" | "SHIPPING" | "DELIVERED";
 
 export interface OrderItem {
+  id?: string; // ID komoditas untuk pengurangan stok
   commodity: string;
   qty: number; // in KG
   price: number;
@@ -119,15 +120,41 @@ const Index = () => {
   ]);
 
   // --- Order Workflow Handlers ---
-  const handleCreateOrder = (orderData: any) => {
+  const handleCreateOrder = async (orderData: any) => {
     const newOrder: Order = {
       id: `AM-${Math.floor(1000 + Math.random() * 9000)}`,
       ...orderData,
       status: "PENDING_MATCHMAKING",
     };
-    setOrders(prev => [newOrder, ...prev]);
-    setCart([]);
-    showSuccess("Pesanan dibuat! Menunggu Matchmaking Admin.");
+
+    try {
+      // 1. Kurangi stok di database untuk setiap item
+      for (const item of orderData.items) {
+        if (item.id) {
+          // Konversi KG ke Ton (karena stok di DB dalam Ton)
+          const qtyInTon = item.qty / 1000;
+          
+          const { error } = await supabase.rpc('reduce_stock', {
+            commodity_id: item.id,
+            quantity_to_reduce: qtyInTon
+          });
+
+          if (error) throw error;
+        }
+      }
+
+      // 2. Update state lokal
+      setOrders(prev => [newOrder, ...prev]);
+      setCart([]);
+      
+      // 3. Refresh data komoditas untuk sinkronisasi UI
+      await fetchCommodities();
+      
+      showSuccess("Pesanan dibuat! Stok telah diperbarui secara otomatis.");
+    } catch (error: any) {
+      console.error("Error processing order stock:", error);
+      showError("Gagal memproses pesanan: " + error.message);
+    }
   };
 
   const handleApproveOrder = (orderId: string) => {
@@ -186,7 +213,6 @@ const Index = () => {
     try {
       // 1. Upload ke Supabase Storage jika ada file
       if (file) {
-        // Pastikan file adalah objek File yang valid
         if (!(file instanceof File)) {
           console.error("Invalid file object detected:", file);
           throw new Error("Objek file tidak valid.");
@@ -196,8 +222,6 @@ const Index = () => {
         const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
         const filePath = `public/${fileName}`;
         
-        console.log("Attempting to upload to bucket 'commodity-images' at path:", filePath);
-
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('commodity-images')
           .upload(filePath, file, {
@@ -210,13 +234,11 @@ const Index = () => {
           throw new Error(`Gagal mengunggah gambar: ${uploadError.message}`);
         }
 
-        // 2. Ambil Public URL
         const { data: urlData } = supabase.storage
           .from('commodity-images')
           .getPublicUrl(filePath);
         
         publicImageUrl = urlData.publicUrl;
-        console.log("Image uploaded successfully. Public URL:", publicImageUrl);
       }
 
       // 3. Simpan ke Database
