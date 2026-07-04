@@ -34,8 +34,6 @@ export interface Order {
   totalWeight: number;
   totalPrice: number;
   status: OrderStatus;
-  paymentMethod?: string;
-  bankName?: string;
   adminApprovalTimestamp?: number;
   matchedSource?: string;
   logistics?: string;
@@ -123,56 +121,38 @@ const Index = () => {
 
   // --- Order Workflow Handlers ---
   const handleCreateOrder = async (orderData: any) => {
-    const orderNum = `AM-${Math.floor(1000 + Math.random() * 9000)}`;
-    
+    const newOrder: Order = {
+      id: `AM-${Math.floor(1000 + Math.random() * 9000)}`,
+      ...orderData,
+      status: "PENDING_MATCHMAKING",
+    };
+
     try {
-      // 1. Simpan ke tabel orders di Supabase
-      const { data: savedOrder, error: orderError } = await supabase
-        .from('orders')
-        .insert([
-          {
-            order_number: orderNum,
-            buyer_name: orderData.buyerName,
-            buyer_phone: orderData.buyerPhone,
-            shipping_address: orderData.address,
-            region: orderData.region,
-            total_price: orderData.totalPrice,
-            payment_method: orderData.paymentMethod,
-            bank_name: orderData.bankName,
-            payment_status: orderData.paymentMethod === 'COD' ? 'Pending' : 'Waiting for Payment'
-          }
-        ])
-        .select();
-
-      if (orderError) throw orderError;
-
-      // 2. Kurangi stok di database untuk setiap item
+      // 1. Kurangi stok di database untuk setiap item
       for (const item of orderData.items) {
         if (item.id) {
+          // Konversi KG ke Ton (karena stok di DB dalam Ton)
           const qtyInTon = item.qty / 1000;
-          const { error: stockError } = await supabase.rpc('reduce_stock', {
+          
+          const { error } = await supabase.rpc('reduce_stock', {
             commodity_id: item.id,
             quantity_to_reduce: qtyInTon
           });
-          if (stockError) throw stockError;
+
+          if (error) throw error;
         }
       }
 
-      // 3. Update state lokal
-      const newOrder: Order = {
-        id: orderNum,
-        ...orderData,
-        status: "PENDING_MATCHMAKING",
-      };
+      // 2. Update state lokal
       setOrders(prev => [newOrder, ...prev]);
       setCart([]);
       
-      // 4. Refresh data komoditas
+      // 3. Refresh data komoditas untuk sinkronisasi UI
       await fetchCommodities();
       
-      showSuccess(`Pesanan ${orderNum} berhasil dibuat! Silakan cek status di portal Anda.`);
+      showSuccess("Pesanan dibuat! Stok telah diperbarui secara otomatis.");
     } catch (error: any) {
-      console.error("Error processing order:", error);
+      console.error("Error processing order stock:", error);
       showError("Gagal memproses pesanan: " + error.message);
     }
   };
@@ -231,6 +211,7 @@ const Index = () => {
     let publicImageUrl = "";
 
     try {
+      // 1. Upload ke Supabase Storage jika ada file
       if (file) {
         if (!(file instanceof File)) {
           console.error("Invalid file object detected:", file);
@@ -260,6 +241,7 @@ const Index = () => {
         publicImageUrl = urlData.publicUrl;
       }
 
+      // 3. Simpan ke Database
       const { data, error } = await supabase
         .from('commodities')
         .insert([
