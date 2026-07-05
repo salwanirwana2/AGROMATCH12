@@ -10,6 +10,7 @@ import LogisticsPortal from '@/components/agromatch/LogisticsPortal';
 import ForecastingPortal from '@/components/agromatch/ForecastingPortal';
 import LandingPage from '@/components/agromatch/LandingPage';
 import LoginPage from '@/components/agromatch/LoginPage';
+import PaymentInvoice from '@/components/agromatch/PaymentInvoice';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showSuccess, showError } from '@/utils/toast';
 import { supabase } from "@/integrations/supabase/client";
@@ -43,7 +44,7 @@ export interface Order {
 }
 
 const Index = () => {
-  const [appState, setAppState] = useState<'landing' | 'login' | 'dashboard'>('landing');
+  const [appState, setAppState] = useState<'landing' | 'login' | 'dashboard' | 'payment'>('landing');
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -53,6 +54,7 @@ const Index = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [supplies, setSupplies] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
 
   const [demands, setDemands] = useState([
     { id: 1, region: "Banda Aceh", commodity: "Beras", qty: 180, maxPrice: 12000, date: "2026-06-12", client: "Pasar Induk Lambaro" }
@@ -146,16 +148,12 @@ const Index = () => {
       for (const item of orderData.items) {
         if (item.id) {
           const qtyInTon = item.qty / 1000;
-          // PENTING: Nama parameter harus cocok dengan definisi SQL (commodity_id, quantity_to_reduce)
           const { error: rpcError } = await supabase.rpc('reduce_stock', {
             commodity_id: item.id,
             quantity_to_reduce: qtyInTon
           });
           
-          if (rpcError) {
-            console.error("RPC Error:", rpcError);
-            throw rpcError;
-          }
+          if (rpcError) throw rpcError;
         }
       }
 
@@ -167,11 +165,18 @@ const Index = () => {
       };
       setOrders(prev => [newOrder, ...prev]);
       setCart([]);
+      setCurrentOrder(newOrder);
       
       // 4. Refresh commodities for UI sync
       await fetchCommodities();
       
-      showSuccess("Pesanan berhasil dibuat! Silakan selesaikan pembayaran.");
+      showSuccess("Pesanan berhasil dibuat!");
+
+      // 5. UX DELAY & REDIRECT
+      setTimeout(() => {
+        setAppState('payment');
+      }, 1500);
+
     } catch (error: any) {
       console.error("Error processing order:", error);
       showError("Gagal memproses pesanan: " + (error.message || "Terjadi kesalahan pada server"));
@@ -327,6 +332,10 @@ const Index = () => {
         )}
         {appState === 'login' && selectedRole && <LoginPage role={selectedRole} onLogin={handleLogin} onBack={() => setAppState('landing')} />}
         
+        {appState === 'payment' && currentOrder && (
+          <PaymentInvoice order={currentOrder} onClose={() => setAppState('dashboard')} />
+        )}
+
         {appState === 'dashboard' && user && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <Alerts alerts={alerts} onClear={() => setAlerts([])} />
