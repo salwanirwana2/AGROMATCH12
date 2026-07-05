@@ -142,15 +142,20 @@ const Index = () => {
 
       if (orderError) throw orderError;
 
-      // 2. Reduce stock in database for each item
+      // 2. Reduce stock in database for each item using RPC
       for (const item of orderData.items) {
         if (item.id) {
           const qtyInTon = item.qty / 1000;
-          const { error: stockError } = await supabase.rpc('reduce_stock', {
+          // PENTING: Nama parameter harus cocok dengan definisi SQL (commodity_id, quantity_to_reduce)
+          const { error: rpcError } = await supabase.rpc('reduce_stock', {
             commodity_id: item.id,
             quantity_to_reduce: qtyInTon
           });
-          if (stockError) throw stockError;
+          
+          if (rpcError) {
+            console.error("RPC Error:", rpcError);
+            throw rpcError;
+          }
         }
       }
 
@@ -169,7 +174,7 @@ const Index = () => {
       showSuccess("Pesanan berhasil dibuat! Silakan selesaikan pembayaran.");
     } catch (error: any) {
       console.error("Error processing order:", error);
-      showError("Gagal memproses pesanan: " + error.message);
+      showError("Gagal memproses pesanan: " + (error.message || "Terjadi kesalahan pada server"));
     }
   };
 
