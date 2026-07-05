@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Truck, Clock, Network, MapPin, Package, Phone, User, Calendar } from 'lucide-react';
+import { Truck, Clock, Network, MapPin, Package, Phone, User, Calendar, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,18 @@ interface LogisticsPortalProps {
 
 const LogisticsPortal = ({ shipments }: LogisticsPortalProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleAmbilRute = (origin: string, destination: string) => {
+    // Membersihkan string alamat untuk URL
+    const encodedOrigin = encodeURIComponent(origin);
+    const encodedDestination = encodeURIComponent(destination);
+    
+    // Format URL untuk Google Maps Directions
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodedOrigin}&destination=${encodedDestination}&travelmode=driving`;
+    
+    // Membuka di tab baru atau aplikasi bawaan hp
+    window.open(mapsUrl, '_blank');
+  };
 
   return (
     <div className="space-y-6">
@@ -93,8 +105,12 @@ const LogisticsPortal = ({ shipments }: LogisticsPortalProps) => {
                       </div>
                       <span className="text-[10px] font-bold text-slate-500 uppercase">{ship.logistics}</span>
                     </div>
-                    <Button size="sm" className="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border-none rounded-xl font-bold text-xs">
-                      Ambil Rute
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleAmbilRute(ship.matchedSource, `${ship.region}, ${ship.address}`)}
+                      className="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border-none rounded-xl font-bold text-xs flex items-center gap-1.5"
+                    >
+                      <ExternalLink size={14} /> Ambil Rute
                     </Button>
                   </div>
                 </div>
